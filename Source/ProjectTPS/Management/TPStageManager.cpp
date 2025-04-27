@@ -57,7 +57,7 @@ UTPStageManager::UTPStageManager()
 
 	// 스킬 테이블 로드
 	FString SkillDataPath = TEXT("/Script/Engine.DataTable'/Game/Table/InGame/SkillTable.SkillTable'");
-	static ConstructorHelpers::FObjectFinder<UDataTable> DT_SKILL_TB(*PassiveDataPath);
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_SKILL_TB(*SkillDataPath);
 	TPCHECK(DT_SKILL_TB.Succeeded());
 	TPSkillTable = DT_SKILL_TB.Object;
 	TPCHECK(TPSkillTable->GetRowMap().Num() > 0);
@@ -466,24 +466,51 @@ FTPSkillTable* UTPStageManager::GetSkillInfo(int InSkillIndex)
 	FTPSkillTable* FindData = nullptr;
 	for (const FName& RowName : TPSkillTable->GetRowNames())
 	{
-		FindData = TPPassiveTable->FindRow<FTPSkillTable>(RowName, ContextString);
+		FindData = TPSkillTable->FindRow<FTPSkillTable>(RowName, ContextString);
 		if (FindData && FindData->Index == InSkillIndex) // 데이터는 하나밖에없다.
 			return FindData;
 	}
 	return nullptr;
 }
 
-FTPPassiveGroupTable* UTPStageManager::GetPassiveSkillInfo(int InGroupID, int InLv)
+TArray<FTPPassiveGroupTable*> UTPStageManager::GetPassiveSkillInfo(int InGroupID, int InLv)
 {
 	FString ContextString = "Empty Passive Skill Group Data";
-	FTPPassiveGroupTable* FindData = nullptr;
-	for (const FName& RowName : TPSkillTable->GetRowNames())
+	TArray<FTPPassiveGroupTable*> ArrFindData;
+	for (const FName& RowName : TPPassiveGroupTable->GetRowNames())
 	{
-		FindData = TPPassiveTable->FindRow<FTPPassiveGroupTable>(RowName, ContextString);
-		if (FindData && FindData->GroupID == InGroupID && FindData->Lv == InLv) // 데이터는 하나밖에없다.
-			return FindData;
+		FTPPassiveGroupTable* FindData = TPPassiveGroupTable->FindRow<FTPPassiveGroupTable>(RowName, ContextString);
+		if (FindData && FindData->GroupID == InGroupID) // 데이터는 하나밖에없다.
+		{
+			if (FindData->Lv == InLv)
+				ArrFindData.Add(FindData);
+			else if (FindData->Lv > InLv)
+				break;
+		}
 	}
-	return nullptr;
+	return ArrFindData;
+}
+
+ESkillEffectType UTPStageManager::GetEffectType(ESkillType InSkillType, int InGroupID, int InLv)
+{
+	switch (InSkillType)
+	{
+	case ESkillType::ST_PASSIVE:
+	{
+		TArray<FTPPassiveGroupTable*> CurFindInfo = GetPassiveSkillInfo(InGroupID, InLv);
+		TPCHECK(CurFindInfo.Num()>0, ESkillEffectType::SEffect_NONE);
+		return CurFindInfo[0]->EffectType;
+	}
+	break;
+	case ESkillType::ST_ACTIVE:
+	{
+
+	}
+	break;
+	default:
+		break;
+	}
+	return ESkillEffectType::SEffect_NONE;
 }
 
 void UTPStageManager::SetManagerStep(EStageManagerStep NewStep)

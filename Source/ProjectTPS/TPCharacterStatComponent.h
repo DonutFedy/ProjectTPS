@@ -197,6 +197,7 @@ public:
 	void RecoverAccuracy(float DeltaTime);
 	void DecreaseAccuracy();
 
+	TObjectPtr<class ATPCharacter> GetOwnChar(){return OwnChar;}
 
 	FOnHPIsZeroDelegate OnHPIsZero;
 	FOnHPChangedDelegate OnHPChanged;
