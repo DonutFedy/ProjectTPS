@@ -37,6 +37,7 @@ public:
 
 
 	void AddSkill(struct FTPSkillInitData& InAddSkillInfo);
+	void RemoveSkill(int RemoveSkillIndex);
 
 protected:
 	// Called when the game starts or when spawned

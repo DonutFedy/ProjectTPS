@@ -25,6 +25,11 @@ public:
 
 	void InitController();
 	void InitTitle();
+	
+	UFUNCTION(Exec)
+	void TP_AddSkill(int SkillIndex, int SkillLv);
+	UFUNCTION(Exec)
+	void TP_RemoveSkill(int SkillIndex);
 
 protected:
 	virtual void BeginPlay() override;

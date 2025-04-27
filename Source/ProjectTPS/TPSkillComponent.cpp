@@ -7,6 +7,11 @@
 #include "GamePlay/TPSkillBufQueryBase.h"
 #include "GamePlay/Skills/TPSkillBase_Legacy.h"
 #include "GamePlay/Skills/TPSkillController.h"
+#include "Table/TPSkillTable.h"
+#include "GamePlay/Skills/Buf/TPBufBase.h"
+#include <Runtime/Engine/Classes/GameFramework/Actor.h>
+#include "TPCharacterStatComponent.h"
+#include "TPCharacter.h"
 
 // Sets default values for this component's properties
 UTPSkillComponent::UTPSkillComponent()
@@ -22,9 +27,6 @@ UTPSkillComponent::UTPSkillComponent()
 
 void UTPSkillComponent::SetSkillComponent(TObjectPtr <UTPCharacterStatComponent> InCharStateComp, TArray<FTPSkillInitData>& InStartSkills)
 {
-	ArrActiveSkills.Empty();
-	ArrPassiveSkills.Empty();
-	ArrBufQueries.Empty();
 	spStatComp = InCharStateComp;
 
 	// 해당 데이터를 로드한다....
@@ -39,9 +41,11 @@ void UTPSkillComponent::AddSkill(FTPSkillInitData& InAddSkillInfo)
 	FString AddSkillLog = "";
 	// 해당 스킬을 추가한다.
  	auto ABGameInstance = Cast<UTPGameInstance>(GetWorld()->GetGameInstance());
-	UTPSkillController* CurSkillInfo = ABGameInstance->GetSkillController(InAddSkillInfo, this);
+	UTPSkillController* CurSkillController = ABGameInstance->GetSkillController(InAddSkillInfo, this);
+	TPCHECK(CurSkillController != nullptr);
 
-
+	// 스킬 관리자에 넘기기.
+	ArrSkillController.Add(CurSkillController);
 
 
 // 	UTPSkillBase_Legacy* CurSkillInfo = ABGameInstance->GetSkillInfo_Legacy(InAddSkillInfo);
@@ -60,84 +64,39 @@ void UTPSkillComponent::AddSkill(FTPSkillInitData& InAddSkillInfo)
 // 	}
 // 	CurSkillInfo->SetSkill(InAddSkillInfo.SkillIndex, InAddSkillInfo.SkillLv, this);
 
-	TPLOG(Warning, TEXT("Add Skill %s"), *AddSkillLog);
+	TPLOG(Warning, TEXT("Add Skill %d"), InAddSkillInfo.SkillIndex);
+}
+
+
+void UTPSkillComponent::RemoveSkill(int RemoveSkillIndex)
+{
+	FString AddSkillLog = "";
+	// 스킬 관리자에서 제거.
+	for (auto FindSkillInfo : ArrSkillController)
+	{
+		if (FindSkillInfo->GetSkillIndex() != RemoveSkillIndex)
+			continue;
+		FindSkillInfo->ReleaseSkill();
+		ArrSkillController.Remove(FindSkillInfo);
+		break;
+	}
+
+	TPLOG(Warning, TEXT("Remove Skill %d"), RemoveSkillIndex);
 }
 
 bool UTPSkillComponent::IsHaveSkill(int SkillIndex, ESkillType InSkillType)
 {
-	TArray<TObjectPtr<UTPSkillBase_Legacy>>* TargetArrData = nullptr;
-
-	switch (InSkillType)
-	{
-	case ESkillType::ST_PASSIVE:
-		TargetArrData = &ArrPassiveSkills;
-		break;
-	case ESkillType::ST_ACTIVE:
-		TargetArrData = &ArrActiveSkills;
-		break;
-	default:
-		break;
-	}
-	if (TargetArrData == nullptr || TargetArrData->Num() <= 0)
-		return false;
-
-	TObjectPtr<UTPSkillBase_Legacy>* Found = Algo::FindByPredicate(*TargetArrData, [SkillIndex](const TObjectPtr<UTPSkillBase_Legacy>& Elem)
-		{
-			return Elem->SkillIndex == SkillIndex;
-		});
-	if (Found && Found->IsNull() == false)
-	{
-		return true;
-	}
-	else
-		return false;
+	return false;
 }
 
 int UTPSkillComponent::GetSkillLevel(int SkillIndex, ESkillType InSkillType)
 {
-	TArray<TObjectPtr<UTPSkillBase_Legacy>>* TargetArrData = nullptr;
-
-	switch (InSkillType)
-	{
-	case ESkillType::ST_PASSIVE:
-		TargetArrData = &ArrPassiveSkills;
-		break;
-	case ESkillType::ST_ACTIVE:
-		TargetArrData = &ArrActiveSkills;
-		break;
-	default:
-		break;
-	}
-	if (TargetArrData == nullptr || TargetArrData->Num() <= 0)
-		return false;
-
-	TObjectPtr<UTPSkillBase_Legacy>* Found = Algo::FindByPredicate(*TargetArrData, [SkillIndex](const TObjectPtr<UTPSkillBase_Legacy>& Elem)
-		{
-			return Elem->SkillIndex == SkillIndex;
-		});
-	if (Found && Found->IsNull() == false)
-	{
-		return (*Found)->CurSkillLV;
-	}
-	else
-		return 0;
+	return 0;
 }
 
 float UTPSkillComponent::GetSkillColdTime(int SkillIndex)
 {
-	if (ArrActiveSkills.Num() <= 0)
-		return 0.f;
-
-	TObjectPtr<UTPSkillBase_Legacy>* Found = Algo::FindByPredicate(ArrActiveSkills, [SkillIndex](const TObjectPtr<UTPSkillBase_Legacy>& Elem)
-		{
-			return Elem->SkillIndex == SkillIndex;
-		});
-	if (Found && Found->IsNull() == false)
-	{
-		return (*Found)->CurrentColdTime;
-	}
-	else
-		return 0;
+	return 0;
 }
 
 // Called when the game starts
@@ -153,35 +112,84 @@ void UTPSkillComponent::BeginPlay()
 
 void UTPSkillComponent::TickSkillComponent(float DeltaTime)
 {
-	FTPCharacterStatInfo& CurAddStat = spStatComp->GetStatInfo();
-	for (int PassiveIndex = 0; PassiveIndex < ArrPassiveSkills.Num(); )
+// 	for (int PassiveIndex = 0; PassiveIndex < ArrPassiveSkills.Num(); )
+// 	{
+// 		if (ArrPassiveSkills[PassiveIndex]->CheckBufTime(DeltaTime) == false)
+// 		{
+// 			ArrPassiveSkills[PassiveIndex]->UnProcessBuf(CurAddStat, spStatComp);
+// 			ArrPassiveSkills.RemoveAt(PassiveIndex);
+// 			continue;
+// 		}
+// 		++PassiveIndex;
+// 	}
+
+	for (auto SkillCon : ArrSkillController)
 	{
-		if (ArrPassiveSkills[PassiveIndex]->CheckBufTime(DeltaTime) == false)
+		if (SkillCon)
 		{
-			ArrPassiveSkills[PassiveIndex]->UnProcessBuf(CurAddStat, spStatComp);
-			ArrPassiveSkills.RemoveAt(PassiveIndex);
-			continue;
+			SkillCon->CheckSkillCondition(DeltaTime);
 		}
-		++PassiveIndex;
 	}
+	for (auto BufEffects : MapBuf)
+	{
+		if (BufEffects.Value != nullptr)
+		{
+			BufEffects.Value->CheckBufTime(DeltaTime);
+		}
+	}
+	_TestLog(DeltaTime);
 }
 
-void UTPSkillComponent::AddBufQuery(TObjectPtr<class UTPSkillBase_Legacy> OwnSkill)
+void UTPSkillComponent::_TestLog(float DeltaTime)
 {
-	FTPCharacterStatInfo& CurAddStat = spStatComp->GetStatInfo();
-	int FindIndex = ArrBufQueries.Find(OwnSkill);
-	if (FindIndex != INDEX_NONE)
+	TPCHECK(spStatComp!=nullptr);
+
+	FVector vLogPos = spStatComp->GetOwnChar()->GetActorLocation() + spStatComp->GetOwnChar()->GetActorRightVector() * -100 + FVector(0.f, 0.f, 100.f);
+
+	FString strAllLog = "";
+	for (auto CurSkill : ArrSkillController)
 	{
-		ArrBufQueries[FindIndex]->UnProcessBuf(CurAddStat, spStatComp);
+		strAllLog+=(CurSkill->_GetSkillLog()+"\n");
+	}
+
+	DrawDebugString(
+		GetWorld(),
+		vLogPos,          // 표시할 위치
+		*strAllLog,           // 표시할 텍스트
+		nullptr,                         // 소유 액터 (없으면 nullptr)
+		FColor::Red,                    // 텍스트 색상
+		DeltaTime,                            // 지속 시간
+		true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
+	);
+
+}
+
+bool UTPSkillComponent::AddBuf(int SkillSerializeIndex, FTPPassiveGroupTable& NewBufInfo)
+{
+	// 버프 세팅
+	if (MapBuf.Find(SkillSerializeIndex))
+	{
+		// 기존 버프에 추가한다.
+		MapBuf[SkillSerializeIndex]->AddEffect(NewBufInfo);
+		return true;
 	}
 	else
 	{
-		ArrBufQueries.Add(OwnSkill);
+		TObjectPtr<UTPBufBase> NewBuf = NewObject<UTPBufBase>();
+		NewBuf->InitBuf(NewBufInfo, this);
+		// 버프 등록
+		MapBuf.Add(SkillSerializeIndex, NewBuf);
+		return true;
 	}
-	if (OwnSkill)
-	{
-		OwnSkill->ProcessBuf(CurAddStat, spStatComp);
-	}
+	return false;
+}
+
+void UTPSkillComponent::RemoveEffect(int SkillSerializeIndex, ESkillEffectType InRemoveTargetType)
+{
+	if (MapBuf.Find(SkillSerializeIndex) == nullptr)
+		return;
+	if(MapBuf[SkillSerializeIndex]->RemoveEffect(InRemoveTargetType))
+		MapBuf.Remove(SkillSerializeIndex);
 }
 
 // Called every frame

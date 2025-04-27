@@ -81,7 +81,8 @@ public:
 	class UTPSkillBase_Legacy* GetSkillInfo_Legacy(FTPSkillInitData& InitData);
 	class  UTPSkillController* GetSkillController(FTPSkillInitData& InitData, class UTPSkillComponent* SkillComp);
 	struct FTPSkillTable* GetSkillInfo(int InSkillIndex);
-	struct FTPPassiveGroupTable* GetPassiveSkillInfo(int InGroupID, int InLv);
+	TArray<struct FTPPassiveGroupTable*> GetPassiveSkillInfo(int InGroupID, int InLv);
+	ESkillEffectType GetEffectType(ESkillType InSkillType, int InGroupID, int InLv);
 private:
 	
 #pragma endregion

@@ -13,7 +13,6 @@ void UTPSkillPassive_AddStat::SetSkill(int InSkillIndex, int InSkillLevel, TObje
 // 		OwnComp->AddBufQuery(this, CurBufBP);
 // 		AddSkillLog += " << Add Buf [" + CurBufBP->GetTestLog() + "]";
 // 	}
-	OwnComp->AddBufQuery(this);
 
 
 	TPLOG(Warning, TEXT(">> Set Skill %s"), *AddSkillLog);

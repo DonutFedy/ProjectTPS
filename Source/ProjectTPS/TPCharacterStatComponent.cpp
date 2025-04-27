@@ -196,6 +196,11 @@ void UTPCharacterStatComponent::SetStatComponent(int32 InNewLevel, ATPCharacter*
 		CurStatInfo.SetBasicStat(EBufStatType::BST_ACCURACY, CurrentStatData->Accuracy);
 		CurStatInfo.SetBasicStat(EBufStatType::BST_MOVE_SPD, CurrentStatData->MoveSpd);
 		CurStatInfo.SetBasicStat(EBufStatType::BST_FIRE_RATE, CurrentStatData->FireRate);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DODGE_INVINCIBILITY_TIME, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DODGE_STAMINA_DOWN, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_INCREASED_BULLET_AMMO, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DECREASED_SKILL_COOLTIME, 1);
+
 
 		Level = InNewLevel;
 		SetHP(GetHPMax());
@@ -243,7 +248,11 @@ void UTPCharacterStatComponent::SetAI(int32 InAIIndex, ATPCharacter* CurrentChar
 		CurStatInfo.SetBasicStat(EBufStatType::BST_DROP_EXP, CurrentEnemyData->DropExp);
 		CurStatInfo.SetBasicStat(EBufStatType::BST_DROP_GROUP, CurrentEnemyData->DropGroup);
 		CurStatInfo.SetBasicStat(EBufStatType::BST_ATTACK_RANGE, CurrentEnemyData->AttackRange);
-
+		CurStatInfo.SetBasicStat(EBufStatType::BST_RECOIL, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DODGE_INVINCIBILITY_TIME, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DODGE_STAMINA_DOWN, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_INCREASED_BULLET_AMMO, 1);
+		CurStatInfo.SetBasicStat(EBufStatType::BST_DECREASED_SKILL_COOLTIME, 1);
 
 		SetHP(GetHPMax());
 		SetShield(GetShieldMax());

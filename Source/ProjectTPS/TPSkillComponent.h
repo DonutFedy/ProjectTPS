@@ -20,6 +20,8 @@ public:
 
 	void SetSkillComponent(TObjectPtr <UTPCharacterStatComponent> InCharStateComp , TArray<FTPSkillInitData>& InStartSkills);
 	void AddSkill(FTPSkillInitData& InAddSkillInfo);
+	void RemoveSkill(int RemoveSkillIndex);
+
 
 	bool IsHaveSkill(int SkillIndex, ESkillType InSkillType);
 	int GetSkillLevel(int SkillIndex, ESkillType InSkillType);
@@ -28,7 +30,15 @@ public:
 
 	void TickSkillComponent(float DeltaTime);
 
-	void AddBufQuery(TObjectPtr<class UTPSkillBase_Legacy> NewBuf);
+	void _TestLog(float DeltaTime);
+
+	// return : 할당된 버프 index  
+	// SkillSerializeIndex : 각 스킬들 할당된 고유값.
+	bool AddBuf(int SkillSerializeIndex , FTPPassiveGroupTable& NewBufInfo);
+	void RemoveEffect(int SkillSerializeIndex, ESkillEffectType InRemoveTargetType);
+	
+	TObjectPtr<UTPCharacterStatComponent> GetCharStatComp(){return spStatComp;}
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -40,11 +50,12 @@ public:
 
 private:
 	UPROPERTY()
-	TArray<TObjectPtr<class UTPSkillBase_Legacy>> ArrActiveSkills;
+	TMap<int,TObjectPtr<class UTPBufBase>> MapBuf;
+
+
 	UPROPERTY()
-	TArray<TObjectPtr<class UTPSkillBase_Legacy>> ArrPassiveSkills;
-	UPROPERTY()
-	TArray<TObjectPtr<class UTPSkillBase_Legacy>> ArrBufQueries;
+	TArray<TObjectPtr<class UTPSkillController>> ArrSkillController;
+
 	UPROPERTY()
 	TObjectPtr<UTPCharacterStatComponent> spStatComp;
 

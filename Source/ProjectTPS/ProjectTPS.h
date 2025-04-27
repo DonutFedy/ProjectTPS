@@ -185,6 +185,7 @@ enum class ESpawnerType : uint8
 	EST_GATE,
 };
 
+
 DECLARE_MULTICAST_DELEGATE(FOnNoParamDeletage);
 
 DECLARE_LOG_CATEGORY_EXTERN(ProjectTPS, Log, All);

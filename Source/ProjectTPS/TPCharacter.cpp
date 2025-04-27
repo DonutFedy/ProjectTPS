@@ -151,21 +151,6 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 			EnableInput(TPPlayerController);
 
 			TArray<FTPSkillInitData> StartSkills;
-			//  [4/24/2025 ehgns] Add Skill Test
-			//Test
-			FTPSkillInitData NewPassiveSkill;
-			NewPassiveSkill.SkillIndex = 1002;
-			NewPassiveSkill.SkillLv = 1;
-			StartSkills.Add(NewPassiveSkill);
-
-			NewPassiveSkill.SkillIndex = 1004;
-			NewPassiveSkill.SkillLv = 1;
-			StartSkills.Add(NewPassiveSkill);
-
-			NewPassiveSkill.SkillIndex = 1008;
-			NewPassiveSkill.SkillLv = 1;
-			StartSkills.Add(NewPassiveSkill);
-			//Test end
 			// 초반 스킬 세팅
 			SkillComponent->SetSkillComponent(CharacterStat, StartSkills);
 		}
@@ -444,6 +429,13 @@ void ATPCharacter::AddSkill(FTPSkillInitData& InAddSkillInfo)
 	TPCHECK(SkillComponent);
 	if(SkillComponent)
 		SkillComponent->AddSkill(InAddSkillInfo);
+}
+
+void ATPCharacter::RemoveSkill(int RemoveSkillIndex)
+{
+	TPCHECK(SkillComponent);
+	if (SkillComponent)
+		SkillComponent->RemoveSkill(RemoveSkillIndex);
 }
 
 // Called when the game starts or when spawned

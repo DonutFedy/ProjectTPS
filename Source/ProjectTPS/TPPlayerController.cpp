@@ -6,6 +6,7 @@
 #include "TPPlayerState.h"
 #include "TPCharacter.h"
 #include "TPTitle.h"
+#include "Management/TPStageManager.h"
 
 ATPPlayerController::ATPPlayerController()
 {
@@ -70,6 +71,25 @@ void ATPPlayerController::InitTitle()
 		UITitleWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 	if (HUDWidget)
 		HUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void ATPPlayerController::TP_AddSkill(int SkillIndex, int SkillLv)
+{
+	TObjectPtr<ATPCharacter> CurChar =  Cast<ATPCharacter>(GetCharacter());
+	if (CurChar)
+	{
+		FTPSkillInitData NewSkillData;
+		NewSkillData.SkillIndex = SkillIndex;
+		NewSkillData.SkillLv = SkillLv;
+		CurChar->AddSkill(NewSkillData);
+	}
+}
+
+void ATPPlayerController::TP_RemoveSkill(int SkillIndex)
+{
+	TObjectPtr<ATPCharacter> CurChar = Cast<ATPCharacter>(GetCharacter());
+	if (CurChar)
+		CurChar->RemoveSkill(SkillIndex);
 }
 
 void ATPPlayerController::BeginPlay()
