@@ -1,2 +1,2 @@
----,Index,Level,ShieldMax,ShieldRest,ShieldRecover,HpMax,HpRest,HpRecover,StaminaMax,StaminaRest,StaminaRecover,Attack,SkillAttack,SkillCoolTime,Defence,Pierce,Recoil,Accuracy,MoveSpd,FireRate,BulletSpd,ReloadSpd,CriticalRate,CriticalDamage,JumpForce
-1,"1","1","100","10.000000","5.000000","100","0.000000","0.000000","100","0.000000","3.000000","1.000000","1.000000","1.000000","0.000000","1.000000","1.000000","1.000000","1","1.000000","1.000000","1.000000","1.000000","1.000000","1"
+---,Index,Level,ShieldMax,ShieldRest,ShieldRecover,HpMax,HpRest,HpRecover,StaminaMax,StaminaRest,StaminaRecover,Attack,SkillAttack,SkillCoolTime,Defence,Pierce,Recoil,Accuracy,MoveSpd,FireRate,BulletSpd,ReloadSpd,CriticalRate,CriticalDamage,JumpForce,RollForce
+1,1,1,100,10,5,100,0,0,100,0,3,1,1,1,0,1,1,1,1,1,1,1,1,1,1,200
