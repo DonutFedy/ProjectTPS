@@ -124,6 +124,7 @@ void UTPStageManager::SetNextChapter()
 	}
 	TPCHECK(FindData);
 	CurChapterStages.Empty();
+	int FindMaxStage = 0;
 	if (FindData)
 	{
 		FindData->Chapter;
@@ -137,15 +138,16 @@ void UTPStageManager::SetNextChapter()
 			&& FindStageData->Chapter == FindData->Chapter)
 			{
 				CurChapterStages.Add(*FindStageData);
+				FindMaxStage = FMath::Max(FindMaxStage , FindStageData->Stage);
 			}
 		}
 	}
 
 	TPCHECK(CurChapterStages.Num()>0);
-	TPCHECK((CurChapterStages.Num() - 1) == StageIndexMax);
+	TPCHECK(FindMaxStage == StageIndexMax);
 
 	CurrentStageNum = 0;
-	StageIndexMax = CurChapterStages.Num()-1;
+	//StageIndexMax = CurChapterStages.Num()-1;
 }
 
 void UTPStageManager::CharacterLoad()
