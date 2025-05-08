@@ -4,6 +4,7 @@
 
 #include "ProjectTPS.h"
 #include "GameFramework/Actor.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Sound/SoundCue.h"
 #include "TPWeapon.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWaeponStateChangedDelegate, int32, int32);
@@ -76,6 +77,9 @@ public:
 	void SetHipMode(bool IsNextStateHip);
 	// Hip / Ads end
 
+	// VFX
+	void PlayEffect(); // 사운드랑 vfx 플레이
+	// VFX end
 
 public:
 	void SetGetterTrigger(bool InAvailable);
@@ -159,4 +163,10 @@ public:
 	float	CriticalRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
 	float	CriticalDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	TArray<TObjectPtr<USoundCue>>	CurSoundCue;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	TObjectPtr<class UNiagaraSystem> MuzzleFlashFX;
 };

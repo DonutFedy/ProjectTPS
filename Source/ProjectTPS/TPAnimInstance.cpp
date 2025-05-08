@@ -81,7 +81,12 @@ void UTPAnimInstance::PlayAttackMontage(float PlaySPD)
 {
 	TPCHECK(!IsDead);
 	Montage_Stop(0.1f);
-	float MontageDuration = Montage_Play(AttackMontage, PlaySPD);
+
+	float MontageLength = AttackMontage->GetPlayLength();
+	float ModifySpd = MontageLength;
+	if (PlaySPD > 0)
+		ModifySpd /= PlaySPD;
+	float MontageDuration = Montage_Play(AttackMontage, ModifySpd);
 	if (MontageDuration <= 0)
 	{
 		int t= 1;
@@ -92,7 +97,12 @@ void UTPAnimInstance::PlayReloadMontage(float PlaySPD /*= 1.f*/)
 {
 	TPCHECK(!IsDead);
 	Montage_Stop(0.1f);
-	float MontageDuration = Montage_Play(ReloadMontage, PlaySPD);
+
+	float MontageLength = ReloadMontage->GetPlayLength();
+	float ModifySpd = MontageLength;
+	if(PlaySPD > 0)
+		ModifySpd /= PlaySPD;
+	float MontageDuration = Montage_Play(ReloadMontage, ModifySpd);
 	if (MontageDuration <= 0)
 	{
 		int t = 1;

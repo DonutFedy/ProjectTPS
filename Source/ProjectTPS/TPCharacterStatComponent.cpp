@@ -498,7 +498,8 @@ int32 UTPCharacterStatComponent::GetDropExp()
 
 float UTPCharacterStatComponent::GetReloadSpd()
 {
-	return CurStatInfo.GetStat(EBufStatType::BST_RELOAD_SPD);
+	TPCHECK(CurrentWeapon != nullptr, 0.f);
+	return CurrentWeapon->ReloadTime * CurStatInfo.GetStat(EBufStatType::BST_RELOAD_SPD);
 }
 
 float UTPCharacterStatComponent::GetFireRate()

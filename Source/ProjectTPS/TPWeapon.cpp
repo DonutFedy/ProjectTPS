@@ -7,7 +7,9 @@
 #include "Table/TPBulletRecoilData.h"
 #include "Table/TPWeaponTable.h"
 #include "Engine/EngineTypes.h"
-
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -281,6 +283,12 @@ void ATPWeapon::SetWeapon(bool InbIsPlayer)
 
 		AmmoRemain = WeaponData->StartAmmo;
 		AmmoCharge = WeaponData->Magazine;
+
+		// ¿Ã∆Â∆Æ ∑ŒµÂ.
+		MuzzleFlashFX = Cast<UNiagaraSystem>(
+			StaticLoadObject(UNiagaraSystem::StaticClass(), nullptr, *WeaponData->FireVFX_Path)
+		);
+
 	}
 	CurrentRecoilIndex = 0;
 	ArrRecoil.Empty();
@@ -314,6 +322,22 @@ void ATPWeapon::SetResetFireCombo()
 void ATPWeapon::SetHipMode(bool IsNextStateHip)
 {
 	IsHip = IsNextStateHip;
+}
+
+void ATPWeapon::PlayEffect()
+{
+
+	if (MuzzleFlashFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzleFlashFX, Weapon,
+			TEXT("Muzzle"), FVector::ZeroVector, FRotator::ZeroRotator
+			, EAttachLocation::SnapToTargetIncludingScale, true );
+	}
+
+	if (CurSoundCue.Num())
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, CurSoundCue[FMath::RandRange(0, CurSoundCue.Num() - 1)].Get(), GetActorLocation());
+	}
 }
 
 void ATPWeapon::SetGetterTrigger(bool InAvailable)

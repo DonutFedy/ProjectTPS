@@ -1308,6 +1308,8 @@ void ATPCharacter::ShotBullet()
 
 	NewBullet->InitBullet(ABGameInstance->GetNextBulletIndex(), BulletSpd, this, bIsPlayer);
 
+	CurrentWeapon->PlayEffect();
+
 	// 반동 계산 및 적용.
 	if (UseRecoil)
 	{
