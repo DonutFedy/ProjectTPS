@@ -18,6 +18,7 @@
 #include "../GamePlay/Skills/TPSkillBase.h"
 #include "../GamePlay/Skills/TPSkillController.h"
 #include "../TPSkillComponent.h"
+#include "../../../../../../../Source/Runtime/NavigationSystem/Public/NavigationSystem.h"
 
 
 
@@ -280,6 +281,11 @@ void UTPStageManager::OnCompletedLoadStage()
 	CurStageSpawner.Empty();
 	CurStageGateSpawner = nullptr;
 
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GameInstance->GetWorld());
+	if (NavSys)
+	{
+		NavSys->Build();
+	}
 	if (StageGate == nullptr)
 	{
 		FString GatePath = "/Script/Engine.Blueprint'/Game/Blueprints/BP_StageGate.BP_StageGate_C'";
