@@ -966,12 +966,12 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 	TPPlayerController->GetViewportSize(ViewportX, ViewportY); // 현재 뷰포트 크기 가져오기
 	FVector2D ScreenCenter(ViewportX / 2.f, ViewportY / 2.f);
 
+
 	// 화면 중심에서 월드 방향 가져오기
 	FVector WorldLocation, WorldDirection;
 	TPPlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldLocation, WorldDirection);
 
-
-	FVector BulletStart = WorldLocation;
+	FVector BulletStart = WorldLocation + WorldDirection * SpringArm->TargetArmLength;
 	//FVector BulletTargetPos = BulletStart + (WorldDirection * 10000); // Ray 길이
 	float AccuacyRatio = CharacterStat->GetAccuracyRatio();
 	float CurAimSize = TPPlayerController->GetHUDWidget()->GetAimImgSize() * AccuacyRatio;
