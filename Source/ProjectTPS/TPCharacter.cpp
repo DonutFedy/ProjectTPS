@@ -139,7 +139,7 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 			OnDead.Broadcast();
 			});
 
-
+		GetCharacterMovement()->bEnablePhysicsInteraction = false;
 		GetCharacterMovement()->JumpZVelocity = CharacterStat->GetJumpForce();
 		GetCharacterMovement()->MaxWalkSpeed = CharacterStat->GetMoveSpd();
 
