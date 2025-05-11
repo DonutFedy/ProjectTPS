@@ -281,6 +281,17 @@ public:
 //============================ATTACK end==========================
 #pragma endregion
 
+//============================VFX==========================
+#pragma region VFX
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	TArray<TObjectPtr<class UNiagaraSystem>> ArrHitVFX;
+public:
+	void PlayHitVFX(const FHitResult& Hit);
+#pragma endregion
+//============================VFX end==========================
+
+
 	
 #pragma region Control
 //============================Control==========================

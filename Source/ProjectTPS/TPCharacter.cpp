@@ -25,6 +25,7 @@
 #include "GameFramework/Controller.h"
 #include "Table/TPBulletRecoilData.h"
 #include "Management/TPStageManager.h"
+#include "../../../../../../../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 
 // Sets default values
 ATPCharacter::ATPCharacter()
@@ -1091,6 +1092,23 @@ void ATPCharacter::AttackRelease()
 	{
 		ComboAttackRelease();
 	}
+}
+
+void ATPCharacter::PlayHitVFX(const FHitResult& Hit)
+{
+
+	if (ArrHitVFX.Num())
+	{
+		FRotator DecalRotation = Hit.ImpactNormal.Rotation();
+		DecalRotation.Pitch += 180.0f; // 반대 방향으로 투사
+
+		int randVfxIndex = FMath::RandRange(0, ArrHitVFX.Num() -1);
+
+		UNiagaraFunctionLibrary::SpawnSystemAttached(ArrHitVFX[randVfxIndex], GetCapsuleComponent(),
+			TEXT(""), Hit.ImpactPoint - GetActorLocation(), DecalRotation
+			, EAttachLocation::SnapToTargetIncludingScale, true);
+	}
+
 }
 
 void ATPCharacter::SetTag(FString InTag)

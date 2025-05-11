@@ -174,6 +174,7 @@ void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 
 			FString CurDamageLog = FString::Printf(TEXT("%0.1f"), CurFinalBulletDamage);
 
+
 			DrawDebugString(
 				GetWorld(),
 				Hit.ImpactPoint,          // 표시할 위치
@@ -184,6 +185,7 @@ void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 				true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
 				);
 			HitCharacter->TakeDamage(CurFinalBulletDamage, DmgEvent, OwnerActor->GetController(), this);
+			HitCharacter->PlayHitVFX(Hit);
 		}
 
 
