@@ -4,6 +4,7 @@
 
 #include "ProjectTPS.h"
 #include "GameFramework/Character.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Sound/SoundCue.h"
 #include "TPCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
@@ -218,7 +219,11 @@ protected:
 	FVector GetBulletDirection(FVector& BulletPos);
 
 public:
-	
+	// SFX
+	void OnFootTouch();
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SFX, Meta = (AllowprivateAccess=true))
+	TArray<TObjectPtr< USoundCue>> ArrFootSFX;
 //============================Anim End==========================
 	
 //============================Camera==========================
@@ -297,7 +302,6 @@ public:
 
 
 	void SetTag(FString InTag);
-	
 //============================Control end==========================
 #pragma endregion
 };

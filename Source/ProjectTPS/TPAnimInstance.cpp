@@ -149,6 +149,11 @@ void UTPAnimInstance::AnimNotify_ReloadEnd()
 	OnReloadEndCheck.Broadcast();
 }
 
+void UTPAnimInstance::AnimNotify_FootTouch()
+{
+	OnFootTouch.Broadcast();
+}
+
 FName UTPAnimInstance::GetAttackMontageSectionName(int32 Section)
 {
 	TPCHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);

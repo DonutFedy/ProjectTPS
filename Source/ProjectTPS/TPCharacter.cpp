@@ -377,6 +377,11 @@ void ATPCharacter::InitCharacter()
 		TPLOG(Warning, TEXT("OnReloadEndCheck"));
 		ReloadFinish();
 		});
+		
+	ABAnim->OnFootTouch.AddLambda([this]()-> void {
+		TPLOG(Warning, TEXT("OnFootTouch"));
+		OnFootTouch();
+		});
 
 	ABAnim->OnBulletShoot.AddUObject(this, &ATPCharacter::ShotBullet);
 
@@ -945,22 +950,6 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 	// 3.
 	if (!TPPlayerController) return FVector::Zero();
 
-// 	FVector ShootDirection; // 뷰포트 중앙 방향
-// 
-// 	int32 ViewportX, ViewportY;
-// 	TPPlayerController->GetViewportSize(ViewportX, ViewportY); // 현재 뷰포트 크기 가져오기
-// 
-// 	FVector WorldLocation;
-// 	TPPlayerController->DeprojectScreenPositionToWorld(ViewportX / 2.0f, ViewportY / 2.0f, WorldLocation, ShootDirection);
-// 
-// 	FVector VecTest = (BulletPos + ShootDirection * 5000.f);
-// 	DrawDebugLine(GetWorld(), BulletPos, VecTest, FColor::Red, true, 1.f);
-// 
-// 	FVector ResultPoint = FMath::VRandCone(ShootDirection, GetBulletSplatterAngle());
-// 	FVector ResultTarget = (BulletPos + ResultPoint * 5000.f);
-// 	DrawDebugLine(GetWorld(), BulletPos, ResultTarget, FColor::Blue, true, 1.f);
-
-
 	// 화면 중심 좌표 계산
 	int32 ViewportX, ViewportY;
 	TPPlayerController->GetViewportSize(ViewportX, ViewportY); // 현재 뷰포트 크기 가져오기
@@ -971,7 +960,10 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 	FVector WorldLocation, WorldDirection;
 	TPPlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldLocation, WorldDirection);
 
-	FVector BulletStart = WorldLocation + WorldDirection * SpringArm->TargetArmLength;
+	float curOffset = WorldDirection.Dot(BulletPos - WorldLocation);
+
+	FVector BulletStart = WorldLocation + WorldDirection * curOffset;
+	//FVector BulletStart = WorldLocation + WorldDirection * SpringArm->TargetArmLength;
 	//FVector BulletTargetPos = BulletStart + (WorldDirection * 10000); // Ray 길이
 	float AccuacyRatio = CharacterStat->GetAccuracyRatio();
 	float CurAimSize = TPPlayerController->GetHUDWidget()->GetAimImgSize() * AccuacyRatio;
@@ -998,9 +990,6 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 		FColor::Red,         // 색상
 		FString::Printf(TEXT("Angle : %.1f"), AngleRadians) // 출력할 텍스트
 	);
-
-
-	//FVector BulletTargetPos = BulletStart + (WorldDirection + RandomOffset) * 10000 ;
 
 
 
@@ -1044,41 +1033,18 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 
 	return ShootDirection;
 	
+}
 
-// 	FVector Dir = (ShootDirection - BulletPos);
-// 	Dir.Normalize();
-// 	return Dir.Rotation(); // 방향을 회전 값으로 변환
-
-	//2.
-// 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-// 	if (!PlayerController) return FRotator::ZeroRotator;
-// 
-// 	FVector CameraLocation;
-// 	FRotator CameraRotation;
-// 
-// 	// 카메라 위치 & 회전값 가져오기
-// 	PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-
-
-	// 1.
-	// 라인 트레이스 시작 지점: 카메라 위치
-// 	FVector Start = CameraLocation;
-// 
-// 	// 라인 트레이스 끝 지점: 화면 중앙에서 5000 단위 거리
-// 	FVector End = Start + CameraRotation.Vector() * 5000.0f;
-// 
-// 	FHitResult HitResult;
-// 	FCollisionQueryParams Params;
-// 	Params.AddIgnoredActor(this); // 자기 자신 제외
-// 
-// 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-// 	{
-// 		// 맞은 지점 반환
-// 		return (HitResult.ImpactPoint - CameraLocation).GetSafeNormal();
-// 	}
-
-	// 아무것도 맞지 않았다면 정면 방향 반환
-	//return CameraRotation;
+void ATPCharacter::OnFootTouch()
+{
+	if (bIsPlayer)
+	{
+		// Sound
+		if (ArrFootSFX.Num())
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ArrFootSFX[FMath::RandRange(0, ArrFootSFX.Num() - 1)].Get(), GetActorLocation());
+		}
+	}
 }
 
 void ATPCharacter::InputAttack()

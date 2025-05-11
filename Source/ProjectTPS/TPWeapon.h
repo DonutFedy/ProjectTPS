@@ -57,7 +57,6 @@ public:
 	float GetBulletSpd();
 	float GetAdsLerpTime();
 
-
 	// Stat
 
 
