@@ -425,8 +425,8 @@ float UTPCharacterStatComponent::GetAttackRange()
 	{
 		//float AttackRange = CurrentEnemyData->AttackRange;
 		float AttackRange = CurStatInfo.GetStat(EBufStatType::BST_ATTACK_RANGE);
-		if(CurrentWeapon->GetAnimAttackType() == EAnimAttackType::NEAR_ATTACK)
-			AttackRange = 80.f;
+// 		if(CurrentWeapon->GetAnimAttackType() == EAnimAttackType::NEAR_ATTACK)
+// 			AttackRange = 80.f;
 		return AttackRange;
 	}
 }
