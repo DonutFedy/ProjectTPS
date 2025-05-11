@@ -290,7 +290,7 @@ void ATPWeapon::SetWeapon(bool InbIsPlayer)
 		);
 
 	}
-	CurrentRecoilIndex = 0;
+	SetResetFireCombo(); // 반동 인덱스 랜덤으로 변경
 	ArrRecoil.Empty();
 	FTPBulletRecoilData* RecoilData = ABGameInstance->GetTPRecilData(WeaponIndex);
 	if (RecoilData)
@@ -315,7 +315,9 @@ FVector2D ATPWeapon::GetCurRecoil()
 
 void ATPWeapon::SetResetFireCombo()
 {
-	CurrentRecoilIndex = 0;
+	//CurrentRecoilIndex = 0;
+	// 반동 인덱스 랜덤으로 변경
+	CurrentRecoilIndex = FMath::RandRange(0,ArrRecoil.Num()-1);
 }
 
 

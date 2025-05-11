@@ -39,6 +39,7 @@ public:
 	FOnBulletShootDelegate		OnBulletShoot;
 	FOnAnimNotifyDelegate		OnDashEndCheck;
 	FOnAnimNotifyDelegate		OnReloadEndCheck;
+	FOnAnimNotifyDelegate		OnFootTouch;
 	void SetDeadAnim() { IsDead = true; }
 
 	void SetDash(bool InIsDash){ IsDash  = InIsDash;}
@@ -58,6 +59,8 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_ReloadEnd();
+	UFUNCTION()
+	void AnimNotify_FootTouch();
 
 	FName GetAttackMontageSectionName(int32 Section);
 
