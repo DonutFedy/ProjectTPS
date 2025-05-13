@@ -202,6 +202,7 @@ void UTPCharacterStatComponent::SetStatComponent(int32 InNewLevel, ATPCharacter*
 		CurStatInfo.SetBasicStat(EBufStatType::BST_DECREASED_SKILL_COOLTIME, 1);
 
 
+
 		Level = InNewLevel;
 		SetHP(GetHPMax());
 		SetShield(GetShieldMax());

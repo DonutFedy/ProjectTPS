@@ -34,6 +34,7 @@ public:
 	void ResetParams();
 
 	void InitCharacter();
+	void SetEnemyInfo(struct FTPEnemyData* InfoData);
 	void PlayStage();
 
 
@@ -154,6 +155,8 @@ public:
 #pragma region Stat Component
 	UPROPERTY(VisibleAnywhere, Category=Stat)
 	TObjectPtr<class UTPCharacterStatComponent> CharacterStat;
+
+	int EnemySetupIndex;
 #pragma endregion
 
 

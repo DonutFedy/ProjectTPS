@@ -13,6 +13,9 @@ struct FTPSkillInitData
 public:
 	FTPSkillInitData():SkillIndex(0), SkillLv(0), SkillType(ESkillType::ST_NONE)
 	{}
+	FTPSkillInitData(int InSkillIndex, int InSkillLV) :SkillIndex(InSkillIndex), SkillLv(InSkillLV), SkillType(ESkillType::ST_NONE)
+	{
+	}
 
 	int SkillIndex;
 	int SkillLv;

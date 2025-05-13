@@ -25,7 +25,9 @@
 #include "GameFramework/Controller.h"
 #include "Table/TPBulletRecoilData.h"
 #include "Management/TPStageManager.h"
-#include "../../../../../../../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
+#include "Table/TPCharacterData.h"
+#include "Table/TPEnemyData.h"
 
 // Sets default values
 ATPCharacter::ATPCharacter()
@@ -120,7 +122,7 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 // 			int32 FinalLevel = FMath::Clamp<int32>(TargetLevel, 1, 20);
 			//TPLOG(Warning, TEXT("New NPC Level : %d"), FinalLevel);
 			//CharacterStat->SetNewLevel(FinalLevel);
-			CharacterStat->SetAI(1, this);
+			CharacterStat->SetAI(EnemySetupIndex, this);
 
 			SetTag("Enemy");
 		}
@@ -144,6 +146,7 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		GetCharacterMovement()->JumpZVelocity = CharacterStat->GetJumpForce();
 		GetCharacterMovement()->MaxWalkSpeed = CharacterStat->GetMoveSpd();
 
+		TArray<FTPSkillInitData> StartSkills;
 		if (bIsPlayer)
 		{
 			ReloadFinish();
@@ -151,9 +154,17 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 			SetControlMode(EControlMode::TPS);
 			EnableInput(TPPlayerController);
 
-			TArray<FTPSkillInitData> StartSkills;
-			// 초반 스킬 세팅
-			SkillComponent->SetSkillComponent(CharacterStat, StartSkills);
+			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			TPCHECK(TPGameInstance != nullptr);
+			auto TPPlayerState = Cast<ATPPlayerState>(GetPlayerState());
+			TPCHECK(TPPlayerState != nullptr);
+
+			FTPCharacterData* CurrentStatData = TPGameInstance->GetTPCharacterData(TPPlayerState->GetCharacterLevel());
+			for (auto setupSkill : CurrentStatData->SetupSkills)
+			{
+				if(setupSkill.SkillIndex != 0)
+					StartSkills.Add(FTPSkillInitData(setupSkill.SkillIndex, setupSkill.Level));
+			}
 		}
 		else
 		{
@@ -164,7 +175,24 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 			auto CharacterWidget = Cast<UTPCharacterHUD>(HPBarWidget->GetUserWidgetObject());
 			TPCHECK(CharacterWidget != nullptr);
 			CharacterWidget->BindCharacterStat(CharacterStat);
+
+
+			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			TPCHECK(TPGameInstance != nullptr);
+			auto TPPlayerState = Cast<ATPPlayerState>(GetPlayerState());
+			TPCHECK(TPPlayerState != nullptr);
+
+			FTPEnemyData* CurrentStatData = TPGameInstance->GetTPEnemyData(TPPlayerState->GetCharacterLevel());
+			for (auto setupSkill : CurrentStatData->SetupSkills)
+			{
+				if (setupSkill.SkillIndex != 0)
+					StartSkills.Add(FTPSkillInitData(setupSkill.SkillIndex, setupSkill.Level));
+			}
 		}
+		// 초반 스킬 세팅
+		SkillComponent->SetSkillComponent(CharacterStat, StartSkills);
+
+
 	}
 	break;
 	case ECharacterState::DEAD:
@@ -421,6 +449,13 @@ void ATPCharacter::InitCharacter()
 		SetAds(true);
 
 	}
+}
+
+void ATPCharacter::SetEnemyInfo(FTPEnemyData* InfoData)
+{
+	TPCHECK(CharacterStat != nullptr);
+
+	EnemySetupIndex = InfoData->Index;
 }
 
 void ATPCharacter::PlayStage()

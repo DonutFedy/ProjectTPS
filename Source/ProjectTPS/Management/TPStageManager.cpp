@@ -376,6 +376,7 @@ void UTPStageManager::NextWave()
 
 			if (NewEnemy)
 			{
+				NewEnemy->SetEnemyInfo(CurEnemyData);
 				NewEnemy->InitCharacter();
 				NewEnemy->OnDead.AddLambda([this]()-> void {
 					OnCharacterDead();
