@@ -38,4 +38,6 @@ struct PROJECTTPS_API FTPStageTable : public FTableRowBase
 	TArray<int> SpawnPoint;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FEnemySpawnInfo> SpawnEnemies;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpawnCoolTime;
 };

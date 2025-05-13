@@ -58,7 +58,9 @@ public:
 		SMS_START_GAME,
 		SMS_INIT_CHAPTER,
 		SMS_LOAD_STAGE,
-		SMS_PLAY_STAGE,
+		SMS_LOAD_COMPLETE,
+		SMS_WAIT_WAVE,
+		SMS_PLAY_WAVE,
 		SMS_END_STAGE,
 		SMS_END_CHAPTER,
 		SMS_END_GAME,
@@ -69,6 +71,7 @@ public:
 	void InitManager(class UTPGameInstance* InGameInstance);
 
 	void StartGame(); // 게임을 시작.
+	void TickManager(float deltaTime);
 
 
 	class APlayerStart* GetStartPoint();
@@ -122,6 +125,8 @@ private:
 	int StageIndexMax;
 	int CurrentWaveIndex;
 	int WaveIndexMax;
+
+	float CurrentWaveCoolTime;
 	
 
 	UPROPERTY()

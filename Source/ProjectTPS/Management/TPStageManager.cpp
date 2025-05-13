@@ -107,6 +107,21 @@ void UTPStageManager::StartGame()
 	SetManagerStep(EStageManagerStep::SMS_START_GAME);
 }
 
+void UTPStageManager::TickManager(float deltaTime)
+{
+	if (UTPStageManager::EStageManagerStep::SMS_WAIT_WAVE == CurrentStep)
+	{
+		if (CurrentWaveCoolTime > 0.f)
+		{
+			CurrentWaveCoolTime -= deltaTime;
+		}
+		else if (CurrentWaveCoolTime <= 0.f)
+		{
+			SetManagerStep(EStageManagerStep::SMS_PLAY_WAVE);
+		}
+	}
+}
+
 void UTPStageManager::SetNextChapter()
 {
 	++CurrentChapterIndex;
@@ -312,7 +327,10 @@ void UTPStageManager::OnCompletedLoadStage()
 			}
 		}
 	}
-	NextWave();
+
+
+	SetManagerStep(EStageManagerStep::SMS_LOAD_COMPLETE);
+	//NextWave();
 }
 
 void UTPStageManager::NextWave()
@@ -341,6 +359,8 @@ void UTPStageManager::NextWave()
 
 	CurrentStageIndex = FindIndex;
 	FTPStageTable& CurStageInfo = CurChapterStages[CurrentStageIndex];
+
+	CurrentWaveCoolTime = CurStageInfo.SpawnCoolTime;
 	for (auto EnemySpawnInfo : CurStageInfo.SpawnEnemies)
 	{
 		FTPEnemyData* CurEnemyData = GetTPEnemyData(EnemySpawnInfo.EnemyType);
@@ -365,13 +385,12 @@ void UTPStageManager::NextWave()
 		}
 	}
 
-	SetManagerStep( EStageManagerStep::SMS_PLAY_STAGE);
+	SetManagerStep(EStageManagerStep::SMS_WAIT_WAVE);
+	//SetManagerStep( EStageManagerStep::SMS_PLAY_STAGE);
 }
 
 void UTPStageManager::PlayStage()
 {
-	for (auto CurPlayer : ArrPlayers)
-		CurPlayer->PlayStage();
 	for (auto CurEnemy : ArrEnemies)
 		CurEnemy->PlayStage();
 }
@@ -568,11 +587,22 @@ void UTPStageManager::SetManagerStep(EStageManagerStep NewStep)
 			SetNextStage();
 	}
 		break;
-	case UTPStageManager::EStageManagerStep::SMS_PLAY_STAGE:
+	case UTPStageManager::EStageManagerStep::SMS_LOAD_COMPLETE:
+	{
+		for (auto CurPlayer : ArrPlayers)
+			CurPlayer->PlayStage();
+		NextWave();
+	}
+	break;
+	case UTPStageManager::EStageManagerStep::SMS_WAIT_WAVE:
+	{
+	}
+	break;
+	case UTPStageManager::EStageManagerStep::SMS_PLAY_WAVE:
 	{
 		PlayStage();
 	}
-		break;
+	break;
 	case UTPStageManager::EStageManagerStep::SMS_END_STAGE:
 		break;
 	case UTPStageManager::EStageManagerStep::SMS_END_CHAPTER:

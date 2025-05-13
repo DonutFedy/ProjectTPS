@@ -6,6 +6,7 @@
 #include "Management/TPStageManager.h"
 #include "Engine/GameInstance.h"
 #include "Engine/StreamableManager.h"
+#include "Runtime/Engine/Public/Tickable.h"
 #include "TPGameInstance.generated.h"
 
 // USTRUCT(BlueprintType)
@@ -33,7 +34,7 @@
  * 
  */
 UCLASS()
-class PROJECTTPS_API UTPGameInstance : public UGameInstance
+class PROJECTTPS_API UTPGameInstance : public UGameInstance, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -48,6 +49,9 @@ public:
 	class UTPSkillBase_Legacy* GetSkillInfo_Legacy(FTPSkillInitData& InitData);
 	class UTPSkillController* GetSkillController(FTPSkillInitData& InitData, class UTPSkillComponent* SkillComp);
 	int GetTPRecilDataNum();
+	virtual void Tick(float DeltaTime) override;
+	virtual bool IsTickable() const override { return true; }
+	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT(UTPGameInstance, STATGROUP_Tickables); }
 
 
 	TArray<class ATPCharacter*> GetMainCharacter();

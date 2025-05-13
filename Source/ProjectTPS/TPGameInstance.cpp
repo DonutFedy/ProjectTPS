@@ -85,6 +85,12 @@ int UTPGameInstance::GetTPRecilDataNum()
 	return TPRecoilTable->GetRowMap().Num();
 }
 
+void UTPGameInstance::Tick(float DeltaTime)
+{
+	if(StageManager)
+		StageManager->TickManager(DeltaTime);
+}
+
 TArray<class ATPCharacter*> UTPGameInstance::GetMainCharacter()
 {
 	return StageManager->GetMainCharacter();
