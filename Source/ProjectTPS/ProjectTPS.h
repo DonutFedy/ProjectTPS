@@ -23,9 +23,8 @@ enum class ESkillCategoryType : uint8 {
 UENUM(BlueprintType)
 enum class ESkillUseType : uint8 {
 	SUT_NONE,
-	SUT_ATTACK,
-	SUT_HEALING,
-	SUT_UTILITY,
+	SUT_CONFIRM,
+	SUT_IMMIDIATE,
 };
 UENUM(BlueprintType)
 enum class ESkillConditionType : uint8 {
