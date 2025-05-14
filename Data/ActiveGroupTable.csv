@@ -1,0 +1,6 @@
+---,GroupID,SkillDescription,Lv,ConditionType,ConditionValue,EffectType,EffectValue,TargetType,TargetValue,AreaType,EffectDuration,TickTime,UseCooldown,UseCount,UseStamina
+1,2001,Granade,1,character_use_skill,-1,take_dmg,60,area_enemy,-1,circle,-1,-1,10,1,25
+2,2002,Dmg Up,1,character_use_skill,-1,add_weapon_atk,5,target_self,-1,none,-1,-1,15,1,20
+3,2003,Heal Serum,1,character_use_skill,-1,add_currunt_hp,25,target_self,-1,none,-1,-1,20,1,50
+4,2004,Heal Pile,1,character_use_skill,-1,add_currunt_hp,8,target_self,-1,circle,5,-1,15,1,30
+5,2005,Bubble,1,character_use_skill,-1,add_temp_armor,100,target_self,-1,none,8,1,20,1,30
