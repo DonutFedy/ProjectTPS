@@ -316,12 +316,15 @@ void UTPCharacterStatComponent::RecoveryStamina(float DeltaTime)
 	StaminaRestTime = 0.f;
 	//StaminaRestTime = CurStatInfo.GetStat(EBufStatType::BST_STAMINA_REST);
 
-	CurrentStamina += CurStatInfo.GetStat(EBufStatType::BST_STAMINA_RECOVER);
-	if(GetStaminaMax() < CurrentStamina)
+	if (GetStaminaMax() > CurrentStamina)
 	{
-		CurrentStamina = GetStaminaMax();
+		CurrentStamina += CurStatInfo.GetStat(EBufStatType::BST_STAMINA_RECOVER);
+		if (GetStaminaMax() < CurrentStamina)
+		{
+			CurrentStamina = GetStaminaMax();
+		}
+		OnStaminaChanged.Broadcast();
 	}
-	OnStaminaChanged.Broadcast();
 }
 
 bool UTPCharacterStatComponent::UseStamina(float UsingStamina)
@@ -361,12 +364,15 @@ void UTPCharacterStatComponent::RecoveryShield(float DeltaTime)
 	ShieldRestTime = 0.f;
 	//ShieldRestTime = GetShieldRest();
 
-	CurrentShield += GetShieldRecover();
-	if (GetShieldMax() < CurrentShield)
+	if (GetShieldMax() > CurrentShield)
 	{
-		CurrentShield = GetShieldMax();
+		CurrentShield += GetShieldRecover();
+		if (GetShieldMax() < CurrentShield)
+		{
+			CurrentShield = GetShieldMax();
+		}
+		OnShieldChanged.Broadcast();
 	}
-	OnShieldChanged.Broadcast();
 }
 
 void UTPCharacterStatComponent::RecoveryHP(float DeltaTime)
@@ -379,12 +385,15 @@ void UTPCharacterStatComponent::RecoveryHP(float DeltaTime)
 	HPRestTime=0.f;
 	//HPRestTime = GetHPRest();
 
-	CurrentHP += GetHPRecover();
-	if (GetHPMax() < CurrentHP)
+	if (GetHPMax() > CurrentHP)
 	{
-		CurrentHP = GetHPMax();
+		CurrentHP += GetHPRecover();
+		if (GetHPMax() < CurrentHP)
+		{
+			CurrentHP = GetHPMax();
+		}
+		OnHPChanged.Broadcast();
 	}
-	OnHPChanged.Broadcast();
 }
 
 bool UTPCharacterStatComponent::UseShield(float UsingShield)

@@ -683,7 +683,8 @@ void ATPCharacter::SetWeapon(class ATPWeapon* NewWeapon)
 		BulletSpd = CharacterStat->GetBulletSpd() * 2000.f;
 		AdsLerpTime = CurrentWeapon->GetAdsLerpTime();
 
-		RecoilLerpTime = 1 / (ABAnim->GetAttackAnimLength() / FireAnimSpd);
+		//RecoilLerpTime = 1 / (ABAnim->GetAttackAnimLength() / FireAnimSpd);
+		RecoilLerpTime = FireAnimSpd;
 
 		SetHipMode(true);
 
