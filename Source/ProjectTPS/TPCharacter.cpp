@@ -130,12 +130,19 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		HPBarWidget->SetHiddenInGame(true);
 		SetActorHiddenInGame(true);
 		SetCanBeDamaged(false);
+		if(CurrentWeapon)
+			CurrentWeapon->SetActorHiddenInGame(true);
+
+		SetActorEnableCollision(false);
 	}
 	break;
 	case ECharacterState::READY:
 	{
+		SetActorEnableCollision(true);
 		SetActorHiddenInGame(false);
 		SetCanBeDamaged(true);
+		if (CurrentWeapon)
+			CurrentWeapon->SetActorHiddenInGame(false);
 
 		CharacterStat->OnHPIsZero.AddLambda([this]()->void {
 			SetCharacterState(ECharacterState::DEAD);
