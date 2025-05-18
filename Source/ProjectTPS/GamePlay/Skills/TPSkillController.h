@@ -23,6 +23,8 @@ public:
 	void CheckSkillCondition(float DeltaTime);
 	void CheckSkillConditionAfterAction(ESkillConditionType ActionType); // 특정 액션후 불리는 함수.
 	int GetSkillIndex(){ return CurSetupInfo.SkillIndex;}
+	int GetSkillLv(){ return CurSetupInfo.SkillLv;}
+	int GetEffectValue(ESkillEffectType InEffectType);
 
 	FString _GetSkillLog();
 protected:

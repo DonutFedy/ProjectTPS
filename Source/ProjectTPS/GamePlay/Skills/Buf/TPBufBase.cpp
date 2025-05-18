@@ -65,7 +65,7 @@ bool UTPBufBase::AddEffect(FTPPassiveGroupTable& CurPassiveInfo)
 	case ESkillEffectType::SEffect_ADD_ACTIVE_STAT_USECOUNT:
 		NewEffect.StatType = EBufStatType::BST_INCREASED_SKILL_STACK_COUNT;
 		break;
-	case ESkillEffectType::SEffect_ADD_FIRE_BULLET_NUM:
+	//case ESkillEffectType::SEffect_ADD_FIRE_BULLET_NUM: // 패시브 별도 추가.
 	case ESkillEffectType::SEffect_ADD_BOUNCE_BULLET:
 		break;
 		// 			SEffect_TAKE_DMG,

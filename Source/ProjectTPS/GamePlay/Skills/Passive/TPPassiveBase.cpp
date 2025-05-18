@@ -85,6 +85,16 @@ void UTPPassiveBase::ReleaseSkill()
 	ArrCurSkillConditionInfo.Empty();
 }
 
+int UTPPassiveBase::GetEffectValue(ESkillEffectType InEffectType)
+{
+	for (auto curPassiveInfo : CurPassiveInfo)
+	{
+		if(curPassiveInfo->EffectType == InEffectType)
+			return curPassiveInfo->EffectValue;
+	}
+	return INDEX_NONE;
+}
+
 void UTPPassiveBase::RunSkill(int EffectIndex)
 {	
 	ArrCurSkillConditionInfo[EffectIndex].CurRemainCoolTime = CurPassiveInfo[EffectIndex]->EffectCooldown;

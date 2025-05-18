@@ -573,7 +573,10 @@ void UTPCharacterStatComponent::SetIsHip(bool InIsHip)
 {
 	IsHip = InIsHip;
 
-	CurrentAccuracyRate = MaxAccuracyRate = GetAccuracy();
+	MaxAccuracyRate = GetAccuracy();
+	if(MaxAccuracyRate > 1.f)
+		MaxAccuracyRate = 1.f;
+	CurrentAccuracyRate = MaxAccuracyRate;
 	CurAccuracyRecovery = GetAccuracyRecovery();
 	CurAccuracyDown = GetAccuracyDown();
 	if (CurrentAccuracyRate > MaxAccuracyRate)
@@ -600,11 +603,14 @@ void UTPCharacterStatComponent::RecoverAccuracy(float DeltaTime)
 {
 	if (CurrentAccuracyRate >= MaxAccuracyRate)
 		return;
-	CurrentAccuracyRate += CurAccuracyRecovery * DeltaTime;
-	if (CurrentAccuracyRate > MaxAccuracyRate)
-		CurrentAccuracyRate = MaxAccuracyRate;
-	TPLOG(Warning, TEXT("Accuarcyy #Recovery# : %f"), CurrentAccuracyRate);
-	OnAccuracyChanged.Broadcast();
+	if (CurrentAccuracyRate < MaxAccuracyRate)
+	{
+		CurrentAccuracyRate += CurAccuracyRecovery * DeltaTime;
+		if (CurrentAccuracyRate > MaxAccuracyRate)
+			CurrentAccuracyRate = MaxAccuracyRate;
+		TPLOG(Warning, TEXT("Accuarcyy #Recovery# : %f"), CurrentAccuracyRate);
+		OnAccuracyChanged.Broadcast();
+	}
 }
 
 void UTPCharacterStatComponent::DecreaseAccuracy()

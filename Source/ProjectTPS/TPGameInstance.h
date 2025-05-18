@@ -53,6 +53,8 @@ public:
 	virtual bool IsTickable() const override { return true; }
 	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT(UTPGameInstance, STATGROUP_Tickables); }
 
+	TObjectPtr<class UTPStageManager> GetStageManager(){return StageManager;}
+
 
 	TArray<class ATPCharacter*> GetMainCharacter();
 	TArray<class ATPCharacter*> GetEnemies();
@@ -69,7 +71,7 @@ private:
 protected:
 	void	InitManager();
 	UPROPERTY()
-	class UTPStageManager* StageManager;
+	TObjectPtr<class UTPStageManager> StageManager;
 private:
 	UPROPERTY()
 	UDataTable* TPWeaponTable;

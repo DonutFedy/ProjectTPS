@@ -8,6 +8,7 @@
 #include "../../TPSkillComponent.h"
 #include "Passive/TPPassiveBase.h"
 #include "Passive/TPPassive_AddStat.h"
+#include "Passive/TPPassive_Bullet.h"
 
 
 void UTPSkillController::InitSkill(FTPSkillInitData& InitInfo, UTPSkillComponent* SkillComp, UTPStageManager* StageMgr)
@@ -57,6 +58,15 @@ void UTPSkillController::CheckSkillConditionAfterAction(ESkillConditionType Acti
 		CurSkill->CheckSkillConditionAfterAction(ActionType);
 }
 
+int UTPSkillController::GetEffectValue(ESkillEffectType InEffectType)
+{
+	for (auto CurSkill : ArrCurSkillObj)
+	{
+		CurSkill->GetEffectValue(InEffectType);
+	}
+	return INDEX_NONE;
+}
+
 FString UTPSkillController::_GetSkillLog()
 {
 	return FString::Printf(TEXT("Idx : %d, Lv : %d"), CurSetupInfo.SkillIndex ,CurSetupInfo.SkillLv);
@@ -97,7 +107,11 @@ TArray<TObjectPtr<UTPSkillBase>> UTPSkillController::GetPassiveObj(int InSkillLV
 		case ESkillEffectType::SEffect_MULTIPLY_WEAPON_STAT_MAXAMMO:
 		case ESkillEffectType::SEffect_ADD_CHARACTER_STAT_SKILLCOOLTIME:
 		case ESkillEffectType::SEffect_ADD_ACTIVE_STAT_USECOUNT:
+		case ESkillEffectType::SEffect_ADD_BOUNCE_BULLET:
 			ArrResult.Add( NewObject<UTPPassive_AddStat>());
+			break;
+		case ESkillEffectType::SEffect_ADD_FIRE_BULLET_NUM:
+			ArrResult.Add( NewObject<UTPPassive_Bullet>());
 			break;
 		default:
 			break;

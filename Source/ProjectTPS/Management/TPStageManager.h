@@ -188,13 +188,14 @@ public:
 #pragma region Enemy
 private:
 	UPROPERTY()
-	TArray<class ATPCharacter*> ArrPlayers;
+	TArray<TObjectPtr<class ATPCharacter>> ArrPlayers;
 	UPROPERTY()
-	TArray<class ATPCharacter*> ArrEnemies;
+	TArray<TObjectPtr<class ATPCharacter>> ArrEnemies;
 	
 	UPROPERTY()
 	UDataTable* TPEnemyTable;
 public:
+	TObjectPtr<class ATPCharacter> GetNearEnemy(TObjectPtr<class ATPCharacter> IgnoreChar, FVector InFindPos);
 	struct FTPEnemyData* GetTPEnemyData(int32 InIndex);
 	TArray<class ATPCharacter*> GetEnemies();
 #pragma endregion

@@ -412,7 +412,7 @@ void ATPCharacter::InitCharacter()
 		OnFootTouch();
 		});
 
-	ABAnim->OnBulletShoot.AddUObject(this, &ATPCharacter::ShotBullet);
+	ABAnim->OnBulletShoot.AddUObject(this, &ATPCharacter::TryRealAttack);
 
 	SetCharacterState(ECharacterState::LOADING);
 	auto ABGameInstance = Cast<UTPGameInstance>(GetGameInstance());
@@ -797,6 +797,24 @@ void ATPCharacter::SetHipMode(bool IsNextStateHip)
 	CurrentWeapon->SetHipMode(IsNextStateHip);
 }
 
+int ATPCharacter::CheckHaveSkill(ESkillIndex SkillIndex)
+{
+	TPCHECK(SkillComponent != nullptr, INDEX_NONE);
+	if(SkillComponent)
+		return SkillComponent->GetSkillLevel(SkillIndex);
+
+	return INDEX_NONE;
+}
+
+int ATPCharacter::GetSkillEffect(ESkillIndex SkillIndex)
+{
+	TPCHECK(SkillComponent != nullptr, INDEX_NONE);
+	if (SkillComponent)
+		return SkillComponent->GetSkillLevel(SkillIndex);
+
+	return INDEX_NONE;
+}
+
 void ATPCharacter::RestartLevel()
 {
 	TPPlayerController->RestartLevel();
@@ -1064,8 +1082,8 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 
 
 	//  [4/17/2025 ehgns]
-	DrawDebugCircle(GetWorld(), HitLocation, 10, 20, FColor::Red, false, 1);
-	DrawDebugLine(GetWorld(), BulletPos, HitLocation, FColor::Red, false, 1.f);
+	DrawDebugCircle(GetWorld(), HitLocation, 10, 20, FColor::Red, false, 0.5f);
+	DrawDebugLine(GetWorld(), BulletPos, HitLocation, FColor::Red, false, 0.5f);
 	// ------------------------- DEUBG
 
 	// 발사 방향 계산
@@ -1190,7 +1208,7 @@ void ATPCharacter::AttackEndComboState()
 }
 
 
-void ATPCharacter::ShotBullet()
+void ATPCharacter::TryRealAttack()
 {
 	if (CurrentWeapon == nullptr )
 		return;
@@ -1293,6 +1311,29 @@ void ATPCharacter::ShotBullet()
 			return;
 	}
 
+
+	TPCHECK(SkillComponent);
+	SkillComponent->TrigSkillCondition(ESkillConditionType::SCondition_CHARACTER_FIRE_GUN);
+	ShotBullet();
+	CurrentWeapon->PlayEffect();
+
+	// 반동 계산 및 적용.
+	if (UseRecoil)
+	{
+		FVector2D NextRecoil = CurrentWeapon->GetCurRecoil();
+		TargetRecoil.X = NextRecoil.X;
+		TargetRecoil.Y = NextRecoil.Y;
+		TargetRecoil *= CharacterStat->GetRecoil();
+		CurRecoil = FVector::ZeroVector;
+		NeedRecoil = true;
+		CurRecoilLerpTime = 0.f;
+// 		AddControllerPitchInput(-CurRecoil.Y);
+// 		AddControllerYawInput(-CurRecoil.X);
+	}
+}
+
+void ATPCharacter::ShotBullet()
+{
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
@@ -1322,31 +1363,8 @@ void ATPCharacter::ShotBullet()
 		BulletRot = BulletTargetPos.Rotation();
 	}
 
-
-	
-
-// 	FVector TestTargetPos2 = BulletPos + BulletTargetPos * 100;
-// 	DrawDebugLine(GetWorld(), BulletPos, TestTargetPos2, FColor::Blue, true, 1.f);
-
-	auto NewBullet = GetWorld()->SpawnActor<ATPBullet>(ATPBullet::StaticClass(),BulletPos , BulletRot, SpawnParams);
-
+	auto NewBullet = GetWorld()->SpawnActor<ATPBullet>(ATPBullet::StaticClass(), BulletPos, BulletRot, SpawnParams);
 	NewBullet->InitBullet(ABGameInstance->GetNextBulletIndex(), BulletSpd, this, bIsPlayer);
-
-	CurrentWeapon->PlayEffect();
-
-	// 반동 계산 및 적용.
-	if (UseRecoil)
-	{
-		FVector2D NextRecoil = CurrentWeapon->GetCurRecoil();
-		TargetRecoil.X = NextRecoil.X;
-		TargetRecoil.Y = NextRecoil.Y;
-		TargetRecoil *= CharacterStat->GetRecoil();
-		CurRecoil = FVector::ZeroVector;
-		NeedRecoil = true;
-		CurRecoilLerpTime = 0.f;
-// 		AddControllerPitchInput(-CurRecoil.Y);
-// 		AddControllerYawInput(-CurRecoil.X);
-	}
 }
 
 void ATPCharacter::OnAssetLoadCompleted()
