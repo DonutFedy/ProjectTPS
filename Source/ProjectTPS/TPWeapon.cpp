@@ -243,6 +243,11 @@ float ATPWeapon::GetFireSpd()
 	return FireRate;
 }
 
+float ATPWeapon::GetRecoilLerpTime()
+{
+	return RecoilLerpTime;
+}
+
 float ATPWeapon::GetBulletSpd()
 {
 	return BulletSpd;
@@ -296,6 +301,7 @@ void ATPWeapon::SetWeapon(bool InbIsPlayer)
 	if (RecoilData)
 	{
 		ArrRecoil = RecoilData->Recoil;
+		RecoilLerpTime = RecoilData->RecoilLerpTime;
 	}
 }
 

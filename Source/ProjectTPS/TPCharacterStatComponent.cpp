@@ -518,6 +518,11 @@ float UTPCharacterStatComponent::GetFireRate()
 }
 
 
+float UTPCharacterStatComponent::GetRecoilLerpTime()
+{
+	return CurrentWeapon->GetRecoilLerpTime();
+}
+
 float UTPCharacterStatComponent::GetAccuracy()
 {
 	return CurStatInfo.GetStat(EBufStatType::BST_ACCURACY) * CurrentWeapon->GetAccuracy();

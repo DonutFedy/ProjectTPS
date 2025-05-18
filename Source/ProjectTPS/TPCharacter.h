@@ -128,6 +128,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Accuracy, Meta = (AllowPrivateAccess = true))
 	float RecoilLerpTime = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Accuracy, Meta = (AllowPrivateAccess = true))
+	float CurRecoilLerpTime = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Accuracy, Meta = (AllowPrivateAccess = true))
 	
 	bool NeedRecoil;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Accuracy, Meta = (AllowPrivateAccess = true))

@@ -19,6 +19,8 @@ struct FTPBulletRecoilData : public FTableRowBase
 	int Index;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector2D> Recoil;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
+	float	RecoilLerpTime;
 	
 
 

@@ -679,12 +679,12 @@ void ATPCharacter::SetWeapon(class ATPWeapon* NewWeapon)
 		CharacterStat->SetCurWeapon(NewWeapon);
 
 		// Set WeaponStat
-		FireAnimSpd = CharacterStat->GetFireRate(); // 캐릭터 fireRate * WeaponFireRate
+		FireAnimSpd = 1/CharacterStat->GetFireRate(); // 캐릭터 fireRate * WeaponFireRate
 		BulletSpd = CharacterStat->GetBulletSpd() * 2000.f;
 		AdsLerpTime = CurrentWeapon->GetAdsLerpTime();
 
 		//RecoilLerpTime = 1 / (ABAnim->GetAttackAnimLength() / FireAnimSpd);
-		RecoilLerpTime = FireAnimSpd;
+		RecoilLerpTime = CharacterStat->GetRecoilLerpTime();
 
 		SetHipMode(true);
 
@@ -827,14 +827,16 @@ void ATPCharacter::LerpRecoil(float DeltaTime)
 {
 	if(	NeedRecoil == false )
 		return;
-	FVector UpdateRecoil = FMath::VInterpTo(CurRecoil,TargetRecoil, DeltaTime, RecoilLerpTime);
-	FVector DeltaRecoil = UpdateRecoil - CurRecoil;
-	CurRecoil = UpdateRecoil;
+	CurRecoilLerpTime+= DeltaTime;
+	FVector UpdateRecoil = FMath::VInterpTo(CurRecoil, TargetRecoil, DeltaTime, RecoilLerpTime);
+	//FVector DeltaRecoil = UpdateRecoil - CurRecoil;
+	CurRecoil += UpdateRecoil;
 
-	AddControllerPitchInput(-DeltaRecoil.Y);
-	AddControllerYawInput(-DeltaRecoil.X);
+	AddControllerPitchInput(-UpdateRecoil.Y);
+	AddControllerYawInput(-UpdateRecoil.X);
 
-	if ((TargetRecoil - CurRecoil).Size() < KINDA_SMALL_NUMBER)
+	//if ((TargetRecoil - CurRecoil).Size() < KINDA_SMALL_NUMBER)
+	if (CurRecoilLerpTime >= RecoilLerpTime)
 	{
 		NeedRecoil = false;
 	}
@@ -903,6 +905,8 @@ void ATPCharacter::Dash()
 		return;
 	if (GetMovementComponent()->IsFalling())
 		return;
+
+	AttackRelease();
 
 	if(CharacterStat->UseStamina(10) == false)
 		return;
@@ -1339,6 +1343,7 @@ void ATPCharacter::ShotBullet()
 		TargetRecoil *= CharacterStat->GetRecoil();
 		CurRecoil = FVector::ZeroVector;
 		NeedRecoil = true;
+		CurRecoilLerpTime = 0.f;
 // 		AddControllerPitchInput(-CurRecoil.Y);
 // 		AddControllerYawInput(-CurRecoil.X);
 	}

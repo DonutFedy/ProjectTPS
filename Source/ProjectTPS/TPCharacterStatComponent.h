@@ -167,6 +167,7 @@ public:
 
 
 	float GetFireRate();
+	float GetRecoilLerpTime();
 	float GetAccuracy();
 	float GetAccuracyRecovery();
 	float GetAccuracyDown();

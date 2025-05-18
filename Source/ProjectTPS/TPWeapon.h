@@ -54,6 +54,7 @@ public:
 	float GetAccuracyMin();
 	float GetRecoil();
 	float GetFireSpd();
+	float GetRecoilLerpTime();
 	float GetBulletSpd();
 	float GetAdsLerpTime();
 
@@ -136,6 +137,8 @@ public:
 	float	BulletSpd;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
 	float	FireRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
+	float	RecoilLerpTime;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
 	float	AdsTime;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack)
