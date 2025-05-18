@@ -130,8 +130,6 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		HPBarWidget->SetHiddenInGame(true);
 		SetActorHiddenInGame(true);
 		SetCanBeDamaged(false);
-		if(CurrentWeapon)
-			CurrentWeapon->SetActorHiddenInGame(true);
 
 		SetActorEnableCollision(false);
 	}
@@ -208,6 +206,10 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		ABAnim->SetDeadAnim();
 		SetCanBeDamaged(false);
 
+		if (CurrentWeapon->IsValidLowLevel())
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+		}
 
 		if (bIsPlayer)
 		{
@@ -713,6 +715,10 @@ void ATPCharacter::SetWeapon(class ATPWeapon* NewWeapon)
 
 		if(bIsPlayer)
 			NewWeapon->OnWeaponStateChanged.AddUObject(TPPlayerController->GetHUDWidget(), &UTPInGameUI::UpdateWaeponState);
+		else if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+		}
 	}
 
 }
