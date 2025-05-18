@@ -179,10 +179,8 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 
 			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 			TPCHECK(TPGameInstance != nullptr);
-			auto TPPlayerState = Cast<ATPPlayerState>(GetPlayerState());
-			TPCHECK(TPPlayerState != nullptr);
 
-			FTPEnemyData* CurrentStatData = TPGameInstance->GetTPEnemyData(TPPlayerState->GetCharacterLevel());
+			FTPEnemyData* CurrentStatData = TPGameInstance->GetTPEnemyData(EnemySetupLv);
 			for (auto setupSkill : CurrentStatData->SetupSkills)
 			{
 				if (setupSkill.SkillIndex != 0)
@@ -233,8 +231,11 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 				CurrentWeapon->SetActorTickEnabled(false);
 			}
 
-			SetActorHiddenInGame(true);
-			SetActorTickEnabled(false);
+			if (this->IsValidLowLevel())
+			{
+				SetActorHiddenInGame(true);
+				SetActorTickEnabled(false);
+			}
 			}), DeadTimer, false);
 	}
 	break;
@@ -456,6 +457,7 @@ void ATPCharacter::SetEnemyInfo(FTPEnemyData* InfoData)
 	TPCHECK(CharacterStat != nullptr);
 
 	EnemySetupIndex = InfoData->Index;
+	EnemySetupLv = InfoData->Level;
 }
 
 void ATPCharacter::PlayStage()
@@ -843,7 +845,7 @@ void ATPCharacter::DecreaseAccuracy()
 
 void ATPCharacter::LerpRecoil(float DeltaTime)
 {
-	if(	NeedRecoil == false )
+	if(	NeedRecoil == false || DeltaTime < KINDA_SMALL_NUMBER)
 		return;
 	CurRecoilLerpTime+= DeltaTime;
 	FVector UpdateRecoil = FMath::VInterpTo(CurRecoil, TargetRecoil, DeltaTime, RecoilLerpTime);

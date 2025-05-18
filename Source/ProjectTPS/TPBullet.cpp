@@ -20,8 +20,9 @@ ATPBullet::ATPBullet()
 		RootComponent = CollisionComp;
 		CollisionComp->InitSphereRadius(15.0f);
 		CollisionComp->SetCollisionProfileName(TEXT("Bullet"));
-		CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel3);
-		CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore);
+		CollisionComp->SetCanEverAffectNavigation(false);
+// 		CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel3);
+// 		CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore);
 		CollisionComp->OnComponentHit.AddDynamic(this, &ATPBullet::OnHit);
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATPBullet::OnCharacterOverlap);
 		CollisionComp->SetActive(false);
@@ -39,7 +40,10 @@ ATPBullet::ATPBullet()
 	{
 		Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 		Mesh->SetupAttachment(CollisionComp);
-		Mesh->SetCollisionEnabled( ECollisionEnabled::NoCollision);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCanEverAffectNavigation(false);
+		//Mesh->SetCollisionObjectType(ECollisionChannel::)
+		//Mesh->SetCollisionEnabled( ECollisionEnabled::NoCollision);
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_BULLET(TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 		if (SM_BULLET.Succeeded())
 		{
@@ -51,6 +55,8 @@ ATPBullet::ATPBullet()
 		Movement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MOVEMENT"));
 		Movement->SetUpdatedComponent(CollisionComp);
 	}
+	CollisionComp->SetActive(false);
+	SetActorEnableCollision(false);
 
 	SetActorScale3D(FVector( 0.3f, 0.1f, 0.1f ));
 	
@@ -126,10 +132,12 @@ void ATPBullet::InitBullet(int InIndex, int InBulletSpd, ATPCharacter* InOwnerAc
 	Movement->bRotationFollowsVelocity = true;
 	Movement->bShouldBounce = false;  // 벽에 부딪히면 튕기지 않고 제거
 	Movement->ProjectileGravityScale = 0.0f;
+	Movement->Bounciness = 0.0f;
+	Movement->bSweepCollision = true;
 
 	Movement->Velocity = GetActorForwardVector() * BulletSpd;
 
-
+	PrevTarget = nullptr;
 	UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(CollisionComp->GetMaterial(0));
 
 	if (DynamicMaterial)
@@ -142,13 +150,15 @@ void ATPBullet::InitBullet(int InIndex, int InBulletSpd, ATPCharacter* InOwnerAc
 	}
 
 	CollisionComp->SetActive(true);
+	SetActorEnableCollision(true);
 }
 
 
 
 void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor && OtherActor != this && OwnerActor != OtherActor)
+	return;
+	if (OtherActor && OtherActor != this && OwnerActor != OtherActor && PrevTarget != OtherActor)
 	{
 
 		// 캐릭터와 충돌하면 데미지 적용
@@ -221,13 +231,13 @@ void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 					if (Dist <= 500.f)
 					{
 						// 현재 부딪힌 엑터를 더이상 부딪히지 않게 세팅.
-						CollisionComp->ClearMoveIgnoreActors();
-						CollisionComp->IgnoreActorWhenMoving(HitCharacter, true);
+						PrevTarget = HitCharacter;
 
 						bNeedDestory = false;
 						DrawDebugLine(GetWorld(), GetActorLocation(), FindNearEnemy->GetActorLocation(), FColor::Yellow, false, 1.5f);
-						SetActorRotation((FindNearEnemy->GetActorLocation() - GetActorLocation()).Rotation());
-						Movement->Velocity = GetActorForwardVector() * BulletSpd;
+						FVector NewDir = (FindNearEnemy->GetActorLocation() - GetActorLocation());
+						SetActorRotation(NewDir.Rotation());
+						Movement->Velocity = NewDir * BulletSpd;
 					}
 				}
 			}
@@ -274,4 +284,95 @@ void ATPBullet::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor* 
 // 		// 총알 제거
 // 		Destroy();
 // 	}
+
+	if (OtherActor && OtherActor != this && OwnerActor != OtherActor && PrevTarget != OtherActor)
+	{
+
+		// 캐릭터와 충돌하면 데미지 적용
+		ATPCharacter* HitCharacter = Cast<ATPCharacter>(OtherActor);
+		if (HitCharacter->IsValidLowLevel()
+			&& ((IsPlayersBullet == true && HitCharacter->bIsPlayer == false)
+				|| (IsPlayersBullet == false && HitCharacter->bIsPlayer == true)))
+		{
+			//UGameplayStatics::ApplyDamage(HitCharacter, BulletDamage, nullptr, this, nullptr); // 10 데미지
+			FDamageEvent DmgEvent;
+
+
+
+			// 최종 공격력
+			float FinalDamage = BulletDamage;
+
+			// 최종 방어력
+			float FinalDefence = HitCharacter->GetFinalDefencePoint();
+			if (FinalDefence > 0)
+			{
+				FinalDefence -= BulletPierce;
+				if (FinalDefence <= 0.f)
+					FinalDefence = 0.f;
+			}
+
+			// 치명타
+			float FinalCriticalRate = 1.f;
+			if (FMath::FRandRange(0, 100.f) < BulletCriticalRate)
+			{
+				FinalCriticalRate = BulletCriticalDamageRate;
+			}
+
+			//캐릭터 데미지 = ((캐릭터 최종 공격력 * (몬스터 최종 방어력-캐릭터 방어 관통)) * (캐릭터 치명타 발생 여부 * 캐릭터 치명타 데미지 배율)					
+			float CurFinalBulletDamage = FinalDamage * (1 - FinalDefence) * FinalCriticalRate;
+
+			FString CurDamageLog = FString::Printf(TEXT("%0.1f"), CurFinalBulletDamage);
+
+
+			DrawDebugString(
+				GetWorld(),
+				SweepResult.ImpactPoint,          // 표시할 위치
+				*CurDamageLog,           // 표시할 텍스트
+				nullptr,                         // 소유 액터 (없으면 nullptr)
+				FColor::Red,                    // 텍스트 색상
+				0.5f,                            // 지속 시간
+				true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
+			);
+			HitCharacter->TakeDamage(CurFinalBulletDamage, DmgEvent, OwnerActor != nullptr ?  OwnerActor->GetController() : nullptr, this);
+			HitCharacter->PlayHitVFX(SweepResult);
+		}
+
+
+		SpawnBulletDecal(SweepResult);
+		bool bNeedDestory = true;
+		// 총알을 튕겨야하는가?
+		if (BounceBulletEffectValue > 0)
+		{
+			--BounceBulletEffectValue;
+			// 500 범위의 적을 찾는다.
+			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			TPCHECK(TPGameInstance != nullptr);
+			TObjectPtr< UTPStageManager> StageMgr = TPGameInstance->GetStageManager();
+			TPCHECK(StageMgr != nullptr);
+			if (StageMgr)
+			{
+				TObjectPtr<ATPCharacter> FindNearEnemy = StageMgr->GetNearEnemy(HitCharacter, SweepResult.ImpactPoint);
+				if (FindNearEnemy != nullptr)
+				{
+					float Dist = FVector::Distance(FindNearEnemy->GetActorLocation(), SweepResult.ImpactPoint);
+					if (Dist <= 500.f)
+					{
+						// 현재 부딪힌 엑터를 더이상 부딪히지 않게 세팅.
+						PrevTarget = HitCharacter;
+
+						bNeedDestory = false;
+						DrawDebugLine(GetWorld(), SweepResult.ImpactPoint, FindNearEnemy->GetActorLocation(), FColor::Yellow, false, 1.5f);
+						FVector NewDir = (FindNearEnemy->GetActorLocation() - SweepResult.ImpactPoint);
+						SetActorRotation(NewDir.Rotation());
+						Movement->Velocity = NewDir * BulletSpd;
+					}
+				}
+			}
+		}
+		if (bNeedDestory)
+		{
+			// 총알 제거
+			Destroy();
+		}
+	}
 }
