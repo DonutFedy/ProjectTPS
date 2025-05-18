@@ -73,8 +73,8 @@ public:
 
 	float GetStat(EBufStatType InStatType)
 	{
-// 		switch (InStatType)
-// 		{
+		switch (InStatType)
+ 		{
 // 		case EBufStatType::BST_BULLET_SPD:
 // 		case EBufStatType::BST_RELOAD_SPD:
 // 		case EBufStatType::BST_ACCURACY:
@@ -82,12 +82,14 @@ public:
 // 		case EBufStatType::BST_DODGE_STAMINA_DOWN:
 // 		case EBufStatType::BST_INCREASED_BULLET_AMMO:
 // 		case EBufStatType::BST_SKILL_COOLTIME:
-// 		{
-// 			return GetAddStat(InStatType) * GetBasicStat(InStatType);
-// 		}
-// 		default:
-// 			break;
-// 		}
+ 		case EBufStatType::BST_INCREASED_BULLET_AMMO:
+ 		case EBufStatType::BST_DODGE_STAMINA_DOWN:
+		{
+			return GetAddStat(InStatType) * GetBasicStat(InStatType);
+		}
+		default:
+			break;
+		}
 		return GetAddStat(InStatType) + GetBasicStat(InStatType);
 	}
 

@@ -704,6 +704,25 @@ bool UTPStageManager::IsExistMainCharacter()
 	return ArrPlayers.Num() > 0;
 }
 
+TObjectPtr<ATPCharacter> UTPStageManager::GetNearEnemy(TObjectPtr<ATPCharacter> IgnoreChar, FVector InFindPos)
+{
+	TObjectPtr<ATPCharacter> FindEnemy;
+	float MinDist = 0.f;
+	for (auto CurEnemy : ArrEnemies)
+	{
+		if(CurEnemy == IgnoreChar)
+			continue;
+		float CurDist = (InFindPos - CurEnemy->GetActorLocation()).Size();
+
+		if (FindEnemy == nullptr || MinDist > CurDist)
+		{
+			FindEnemy = CurEnemy;
+			MinDist = CurDist;
+		}
+	}
+	return FindEnemy;
+}
+
 struct FTPEnemyData* UTPStageManager::GetTPEnemyData(int32 InIndex)
 {
 	return TPEnemyTable->FindRow<FTPEnemyData>(*FString::FromInt(InIndex), TEXT(""));

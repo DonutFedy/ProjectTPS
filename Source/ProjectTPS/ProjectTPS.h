@@ -6,6 +6,32 @@
 //#include "CoreMinimal.h"
 #include "EngineMinimal.h"
 
+
+
+//UENUM(BlueprintType)
+enum class ESkillIndex : uint32 {
+	SI_NONE,
+	SI_SHIELD					=	1001,
+	SI_HP						=	1002,
+	SI_STAMINA					=	1003,
+	SI_ATTACK					=	1004,
+	SI_DEFENCE					=	1005,
+	SI_MOVE_SPD					=	1006,
+	SI_CRITICAL_RATE			=	1007,
+	SI_RELOAD_TIME				=	1008,
+	SI_BULLET_SPD				=	1009,
+	SI_ACCURACY_UP				=	1010,
+	SI_RECOIL_DOWN				=	1011,
+
+
+
+	SI_SPLIT_BULLET				=	1014,
+	SI_BOUNCE_BULLET			=	1015,
+
+
+};
+
+
 UENUM(BlueprintType)
 enum class ESkillType : uint8 {
 	ST_NONE,

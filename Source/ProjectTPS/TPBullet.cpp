@@ -5,6 +5,8 @@
 #include "TPCharacter.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/Pawn.h"
+#include "TPGameInstance.h"
+#include "Management/TPStageManager.h"
 
 // Sets default values
 ATPBullet::ATPBullet()
@@ -18,6 +20,8 @@ ATPBullet::ATPBullet()
 		RootComponent = CollisionComp;
 		CollisionComp->InitSphereRadius(15.0f);
 		CollisionComp->SetCollisionProfileName(TEXT("Bullet"));
+		CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel3);
+		CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore);
 		CollisionComp->OnComponentHit.AddDynamic(this, &ATPBullet::OnHit);
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATPBullet::OnCharacterOverlap);
 		CollisionComp->SetActive(false);
@@ -35,6 +39,7 @@ ATPBullet::ATPBullet()
 	{
 		Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 		Mesh->SetupAttachment(CollisionComp);
+		Mesh->SetCollisionEnabled( ECollisionEnabled::NoCollision);
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_BULLET(TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 		if (SM_BULLET.Succeeded())
 		{
@@ -107,6 +112,12 @@ void ATPBullet::InitBullet(int InIndex, int InBulletSpd, ATPCharacter* InOwnerAc
 	BulletPierce = OwnerActor->GetFinalPierceRate();
 	IsPlayersBullet = InIsPlayerBullet;
 
+	TPCHECK(OwnerActor);
+	if (OwnerActor)
+	{
+		// 총알이 튀어야하는 횟수
+		BounceBulletEffectValue =  OwnerActor->GetSkillEffect(ESkillIndex::SI_BOUNCE_BULLET);
+	}
 
 	// 총알 이동 설정
 	Movement->SetUpdatedComponent(CollisionComp);
@@ -139,6 +150,7 @@ void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 {
 	if (OtherActor && OtherActor != this && OwnerActor != OtherActor)
 	{
+
 		// 캐릭터와 충돌하면 데미지 적용
 		ATPCharacter* HitCharacter = Cast<ATPCharacter>(OtherActor);
 		if (HitCharacter->IsValidLowLevel() 
@@ -190,9 +202,41 @@ void ATPBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 
 
 		SpawnBulletDecal(Hit);
+		bool bNeedDestory = true;
+		// 총알을 튕겨야하는가?
+		if (BounceBulletEffectValue > 0)
+		{
+			--BounceBulletEffectValue;
+			// 500 범위의 적을 찾는다.
+			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			TPCHECK(TPGameInstance != nullptr);
+			TObjectPtr< UTPStageManager> StageMgr = TPGameInstance->GetStageManager();
+			TPCHECK(StageMgr != nullptr);
+			if (StageMgr)
+			{
+				TObjectPtr<ATPCharacter> FindNearEnemy = StageMgr->GetNearEnemy(HitCharacter, GetActorLocation());
+				if (FindNearEnemy != nullptr)
+				{
+					float Dist = (FindNearEnemy->GetActorLocation() - GetActorLocation()).Size();
+					if (Dist <= 500.f)
+					{
+						// 현재 부딪힌 엑터를 더이상 부딪히지 않게 세팅.
+						CollisionComp->ClearMoveIgnoreActors();
+						CollisionComp->IgnoreActorWhenMoving(HitCharacter, true);
 
-		// 총알 제거
-		Destroy();
+						bNeedDestory = false;
+						DrawDebugLine(GetWorld(), GetActorLocation(), FindNearEnemy->GetActorLocation(), FColor::Yellow, false, 1.5f);
+						SetActorRotation((FindNearEnemy->GetActorLocation() - GetActorLocation()).Rotation());
+						Movement->Velocity = GetActorForwardVector() * BulletSpd;
+					}
+				}
+			}
+		}
+		if(bNeedDestory)
+		{
+			// 총알 제거
+			Destroy();
+		}
 	}
 }
 

@@ -70,6 +70,8 @@ public:
 
 	UPROPERTY(Transient, VIsibleAnywhere, Category = Bullet)
 	class ATPCharacter* OwnerActor;
+	UPROPERTY(Transient, VIsibleAnywhere, Category = Bullet)
+	int BounceBulletEffectValue;
 
 // 	UPROPERTY(VisibleAnywhere, Category = Movement)
 // 	UFloatingPawnMovement* Movement;

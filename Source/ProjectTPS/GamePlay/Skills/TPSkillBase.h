@@ -29,6 +29,7 @@ public:
 	// 스킬의 발동 여부 체크.
 	virtual bool CheckSkillCondition(float DeltaTime, ESkillConditionType ActionType = ESkillConditionType::SCondition_NONE){ return false; }
 	virtual bool CheckSkillConditionAfterAction(ESkillConditionType ActionType){return false;} // 특정 액션후 불리는 함수.
+	virtual int GetEffectValue(ESkillEffectType InEffectType) {return INDEX_NONE;}
 
 protected:
 	// 스킬 기본 정보

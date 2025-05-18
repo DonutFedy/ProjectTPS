@@ -14,3 +14,4 @@ void UTPSkillBase::InitSkill(int Lv, FTPSkillTable& CurSkillTableInfo, TObjectPt
 	CurSkillInfo = CurSkillTableInfo;
 	SetupSkill(StageMgr);
 }
+

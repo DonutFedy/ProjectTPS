@@ -84,14 +84,44 @@ void UTPSkillComponent::RemoveSkill(int RemoveSkillIndex)
 	TPLOG(Warning, TEXT("Remove Skill %d"), RemoveSkillIndex);
 }
 
-bool UTPSkillComponent::IsHaveSkill(int SkillIndex, ESkillType InSkillType)
+void UTPSkillComponent::TrigSkillCondition(ESkillConditionType InCheckSkillTriggerType)
 {
+	for (auto SkillCon : ArrSkillController)
+	{
+		if (SkillCon) SkillCon->CheckSkillConditionAfterAction(InCheckSkillTriggerType);
+	}
+}
+
+bool UTPSkillComponent::IsHaveSkill(ESkillIndex SkillIndex)
+{
+	int FindSkillIndex = (int)SkillIndex;
+	for (auto SkillCon : ArrSkillController)
+		if(SkillCon->GetSkillIndex() == FindSkillIndex)
+			return true;
 	return false;
 }
 
-int UTPSkillComponent::GetSkillLevel(int SkillIndex, ESkillType InSkillType)
+int UTPSkillComponent::GetSkillEffectValue(ESkillIndex SkillIndex, ESkillEffectType InEffectType)
 {
-	return 0;
+	int FindSkillIndex = (int)SkillIndex;
+	for (auto SkillCon : ArrSkillController)
+	{
+		if (SkillCon->GetSkillIndex() == FindSkillIndex)
+		{
+			return SkillCon->GetEffectValue(InEffectType);
+		}
+	}
+	return INDEX_NONE;
+}
+
+int UTPSkillComponent::GetSkillLevel(ESkillIndex SkillIndex)
+{
+	int FindSkillIndex = (int)SkillIndex;
+	for (auto SkillCon : ArrSkillController)
+		if (SkillCon->GetSkillIndex() == FindSkillIndex)
+			return SkillCon->GetSkillLv();
+
+	return INDEX_NONE;
 }
 
 float UTPSkillComponent::GetSkillColdTime(int SkillIndex)
@@ -198,5 +228,10 @@ void UTPSkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+TObjectPtr<class ATPCharacter> UTPSkillComponent::GetOwnChar()
+{
+	return spStatComp->GetOwnChar();
 }
 

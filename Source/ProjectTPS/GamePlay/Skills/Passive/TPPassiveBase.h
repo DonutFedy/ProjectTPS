@@ -30,14 +30,15 @@ class PROJECTTPS_API UTPPassiveBase : public UTPSkillBase
 public:
 	virtual bool CheckSkillCondition(float DeltaTime, ESkillConditionType ActionType = ESkillConditionType::SCondition_NONE) override;
 
+	// 특정 액션후 불리는 함수.
+	virtual bool CheckSkillConditionAfterAction(ESkillConditionType ActionType) override;
 	virtual void ReleaseSkill() override;
+	virtual int GetEffectValue(ESkillEffectType InEffectType) override;
 protected:
 	// 스킬 발동
 	virtual void RunSkill(int EffectIndex)  override;
 	// 실제 스킬 세팅
 	virtual void SetupSkill(class UTPStageManager* StageMgr) override;
-	// 특정 액션후 불리는 함수.
-	virtual bool CheckSkillConditionAfterAction(ESkillConditionType ActionType) override; 
 
 	virtual void UnapplyEffect(int TargetIndex);
 

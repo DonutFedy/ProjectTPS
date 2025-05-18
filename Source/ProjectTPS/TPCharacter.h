@@ -151,6 +151,8 @@ public:
 #pragma region Skill Component
 	UPROPERTY(VisibleAnywhere, Category=Skill)
 	TObjectPtr<class UTPSkillComponent> SkillComponent;
+	int CheckHaveSkill(ESkillIndex SkillIndex); // return  -1 : none, 
+	int GetSkillEffect(ESkillIndex SkillIndex); // return  -1 : none, 
 #pragma endregion
 
 
@@ -188,8 +190,10 @@ private:
 
 	void AttackStartComboState();
 	void AttackEndComboState();
+	void TryRealAttack();
+public:
 	void ShotBullet();
-
+private:
 	void OnAssetLoadCompleted();
 
 private:
