@@ -161,6 +161,7 @@ public:
 	TObjectPtr<class UTPCharacterStatComponent> CharacterStat;
 
 	int EnemySetupIndex;
+	int EnemySetupLv;
 #pragma endregion
 
 

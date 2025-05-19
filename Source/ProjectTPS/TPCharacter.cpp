@@ -130,12 +130,17 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		HPBarWidget->SetHiddenInGame(true);
 		SetActorHiddenInGame(true);
 		SetCanBeDamaged(false);
+
+		SetActorEnableCollision(false);
 	}
 	break;
 	case ECharacterState::READY:
 	{
+		SetActorEnableCollision(true);
 		SetActorHiddenInGame(false);
 		SetCanBeDamaged(true);
+		if (CurrentWeapon)
+			CurrentWeapon->SetActorHiddenInGame(false);
 
 		CharacterStat->OnHPIsZero.AddLambda([this]()->void {
 			SetCharacterState(ECharacterState::DEAD);
@@ -179,10 +184,8 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 
 			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 			TPCHECK(TPGameInstance != nullptr);
-			auto TPPlayerState = Cast<ATPPlayerState>(GetPlayerState());
-			TPCHECK(TPPlayerState != nullptr);
 
-			FTPEnemyData* CurrentStatData = TPGameInstance->GetTPEnemyData(TPPlayerState->GetCharacterLevel());
+			FTPEnemyData* CurrentStatData = TPGameInstance->GetTPEnemyData(EnemySetupLv);
 			for (auto setupSkill : CurrentStatData->SetupSkills)
 			{
 				if (setupSkill.SkillIndex != 0)
@@ -203,6 +206,10 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		ABAnim->SetDeadAnim();
 		SetCanBeDamaged(false);
 
+		if (CurrentWeapon->IsValidLowLevel())
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+		}
 
 		if (bIsPlayer)
 		{
@@ -233,8 +240,11 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 				CurrentWeapon->SetActorTickEnabled(false);
 			}
 
-			SetActorHiddenInGame(true);
-			SetActorTickEnabled(false);
+			if (this->IsValidLowLevel())
+			{
+				SetActorHiddenInGame(true);
+				SetActorTickEnabled(false);
+			}
 			}), DeadTimer, false);
 	}
 	break;
@@ -456,6 +466,7 @@ void ATPCharacter::SetEnemyInfo(FTPEnemyData* InfoData)
 	TPCHECK(CharacterStat != nullptr);
 
 	EnemySetupIndex = InfoData->Index;
+	EnemySetupLv = InfoData->Level;
 }
 
 void ATPCharacter::PlayStage()
@@ -704,6 +715,10 @@ void ATPCharacter::SetWeapon(class ATPWeapon* NewWeapon)
 
 		if(bIsPlayer)
 			NewWeapon->OnWeaponStateChanged.AddUObject(TPPlayerController->GetHUDWidget(), &UTPInGameUI::UpdateWaeponState);
+		else if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+		}
 	}
 
 }
@@ -843,7 +858,7 @@ void ATPCharacter::DecreaseAccuracy()
 
 void ATPCharacter::LerpRecoil(float DeltaTime)
 {
-	if(	NeedRecoil == false )
+	if(	NeedRecoil == false || DeltaTime < KINDA_SMALL_NUMBER)
 		return;
 	CurRecoilLerpTime+= DeltaTime;
 	FVector UpdateRecoil = FMath::VInterpTo(CurRecoil, TargetRecoil, DeltaTime, RecoilLerpTime);

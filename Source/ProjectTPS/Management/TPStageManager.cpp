@@ -398,9 +398,10 @@ void UTPStageManager::PlayStage()
 
 void UTPStageManager::GameEnd()
 {
-	ArrPlayers.Empty();
 	ArrEnemies.Empty();
-	GetMainCharacter()[0]->RestartLevel();
+	if(GetMainCharacter()[0])
+		GetMainCharacter()[0]->RestartLevel();
+	ArrPlayers.Empty();
 }
 
 class APlayerStart* UTPStageManager::GetStartPoint()
@@ -712,7 +713,8 @@ TObjectPtr<ATPCharacter> UTPStageManager::GetNearEnemy(TObjectPtr<ATPCharacter> 
 	{
 		if(CurEnemy == IgnoreChar)
 			continue;
-		float CurDist = (InFindPos - CurEnemy->GetActorLocation()).Size();
+
+		float CurDist = FVector::Distance(InFindPos, CurEnemy->GetActorLocation());
 
 		if (FindEnemy == nullptr || MinDist > CurDist)
 		{

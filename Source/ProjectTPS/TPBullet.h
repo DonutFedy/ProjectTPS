@@ -71,6 +71,8 @@ public:
 	UPROPERTY(Transient, VIsibleAnywhere, Category = Bullet)
 	class ATPCharacter* OwnerActor;
 	UPROPERTY(Transient, VIsibleAnywhere, Category = Bullet)
+	class AActor* PrevTarget;
+	UPROPERTY(Transient, VIsibleAnywhere, Category = Bullet)
 	int BounceBulletEffectValue;
 
 // 	UPROPERTY(VisibleAnywhere, Category = Movement)
