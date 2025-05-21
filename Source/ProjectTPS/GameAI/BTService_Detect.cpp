@@ -47,7 +47,8 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 
 			auto ABGameInstance = Cast<UTPGameInstance>(ControllingPawn->GetGameInstance());
 			TArray<ATPCharacter*> ArrChar = ABGameInstance->GetMainCharacter();
-
+			if(ArrChar.Num() <= 0)
+				return;
 //			if (ABCharacter && ABCharacter->GetController()->IsPlayerController())
 			{
 				//  [3/27/2025 ehgns] 각도 체크

@@ -8,6 +8,9 @@
 #include "../../../../TPGameInstance.h"
 #include "../../../../Management/TPStageManager.h"
 #include "../TPActiveBase.h"
+#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
+#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraComponent.h"
+#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 // Sets default values
 ATPGranade::ATPGranade()
@@ -35,18 +38,18 @@ ATPGranade::ATPGranade()
 			DynamicMaterial->SetVectorParameterValue(FName("BaseColor"), FLinearColor::Red);
 		}
 	}
-	if (!Mesh)
+	if (!CurMesh)
 	{
-		Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
-		Mesh->SetupAttachment(CollisionComp);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCanEverAffectNavigation(false);
+		CurMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+		CurMesh->SetupAttachment(CollisionComp);
+		CurMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CurMesh->SetCanEverAffectNavigation(false);
 		//Mesh->SetCollisionObjectType(ECollisionChannel::)
 		//Mesh->SetCollisionEnabled( ECollisionEnabled::NoCollision);
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_Granade(TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 		if (SM_Granade.Succeeded())
 		{
-			Mesh->SetStaticMesh(SM_Granade.Object);
+			CurMesh->SetStaticMesh(SM_Granade.Object);
 		}
 	}
 	if (!Movement)
@@ -99,6 +102,48 @@ void ATPGranade::PostInitializeComponents()
 	Super::PostInitializeComponents();
 }
 
+
+void ATPGranade::PlayEffect()
+{
+	if (MuzzleFlashFX)
+	{
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			MuzzleFlashFX,
+			CurMesh->GetComponentLocation(),     // 정확한 위치 지정
+			CurMesh->GetComponentRotation(),     // 방향
+			FVector(1.0f),                              // 스케일
+			true,                                       // AutoDestroy
+			true                                        // AutoActivate
+			);
+
+		if (NiagaraComp)
+		{
+			NiagaraComp->OnSystemFinished.AddDynamic(this, &ATPGranade::OnVFXFinished);
+		}
+		else
+		{
+			// 총알 제거
+			OwnSkill->ReleaseObj(this);
+		}
+	}
+	else
+	{
+		// 총알 제거
+		OwnSkill->ReleaseObj(this);
+	}
+
+	if (CurSoundCue.Num())
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, CurSoundCue[FMath::RandRange(0, CurSoundCue.Num() - 1)].Get(), GetActorLocation());
+	}
+}
+
+void ATPGranade::OnVFXFinished(UNiagaraComponent* PSystem)
+{
+	// 총알 제거
+	OwnSkill->ReleaseObj(this);
+}
 
 void ATPGranade::InitGranade(TObjectPtr<class UTPActiveBase> InOwnSkill, float InGranadeDamage, float InGranadeSpd, float InRange, class ATPCharacter* InOwnerActor, bool InIsPlayerGranade)
 {
@@ -154,6 +199,8 @@ void ATPGranade::InitGranade(TObjectPtr<class UTPActiveBase> InOwnSkill, float I
 
 	SetActorHiddenInGame(false);
 	SetActorTickEnabled(true);
+
+	Movement->Activate(true);
 }
 
 void ATPGranade::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -366,7 +413,8 @@ void ATPGranade::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 			//Destroy();
 			SetActorHiddenInGame(true);
 			SetActorTickEnabled(false);
-			OwnSkill->ReleaseObj(this);
+			Movement->Deactivate();
+			PlayEffect();
 		}
 	}
 }

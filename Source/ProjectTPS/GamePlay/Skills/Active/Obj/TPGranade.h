@@ -27,6 +27,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents()						override;
 
+	// VFX
+	void PlayEffect(); // 사운드랑 vfx 플레이
+	UFUNCTION()
+	void OnVFXFinished(class UNiagaraComponent* PSystem);
+	// VFX end
 
 	void InitGranade(TObjectPtr<class UTPActiveBase> InOwnSkill, float InGranadeDamage, float InGranadeSpd, float InRange , class ATPCharacter* InOwnerActor, bool InIsPlayerGranade);
 	
@@ -42,7 +47,7 @@ public:
 	USphereComponent* CollisionComp;
 
 	UPROPERTY(VisibleAnywhere, Category= Granade)
-	UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* CurMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = Granade)
 	UProjectileMovementComponent* Movement;
@@ -79,6 +84,14 @@ public:
 	
 	UPROPERTY(Transient, VIsibleAnywhere, Category = Granade)
 	TObjectPtr<class UTPActiveBase> OwnSkill;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	TArray<TObjectPtr<USoundCue>>	CurSoundCue;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	TObjectPtr<class UNiagaraSystem> MuzzleFlashFX;
+
 // 	UPROPERTY(VisibleAnywhere, Category = Movement)
 // 	UFloatingPawnMovement* Movement;
 };
