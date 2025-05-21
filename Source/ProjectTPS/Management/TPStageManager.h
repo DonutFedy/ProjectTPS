@@ -11,15 +11,16 @@ struct FTPSkillInitData
 {
 	GENERATED_BODY()
 public:
-	FTPSkillInitData():SkillIndex(0), SkillLv(0), SkillType(ESkillType::ST_NONE)
+	FTPSkillInitData():SkillIndex(0), SkillLv(0), SkillType(ESkillType::ST_NONE), SkillUseType(ESkillUseType::SUT_NONE)
 	{}
-	FTPSkillInitData(int InSkillIndex, int InSkillLV) :SkillIndex(InSkillIndex), SkillLv(InSkillLV), SkillType(ESkillType::ST_NONE)
+	FTPSkillInitData(int InSkillIndex, int InSkillLV) :SkillIndex(InSkillIndex), SkillLv(InSkillLV), SkillType(ESkillType::ST_NONE), SkillUseType(ESkillUseType::SUT_NONE)
 	{
 	}
 
 	int SkillIndex;
 	int SkillLv;
 	ESkillType SkillType;
+	ESkillUseType SkillUseType;
 };
 // 
 // USTRUCT(BlueprintType)
@@ -88,6 +89,7 @@ public:
 	class  UTPSkillController* GetSkillController(FTPSkillInitData& InitData, class UTPSkillComponent* SkillComp);
 	struct FTPSkillTable* GetSkillInfo(int InSkillIndex);
 	TArray<struct FTPPassiveGroupTable*> GetPassiveSkillInfo(int InGroupID, int InLv);
+	TArray<struct FTPActiveGroupTable*> GetActiveSkillInfo(int InGroupID, int InLv);
 	ESkillEffectType GetEffectType(ESkillType InSkillType, int InGroupID, int InLv);
 private:
 	
@@ -166,6 +168,8 @@ private:
 	UPROPERTY()
 	UDataTable* TPPassiveGroupTable;
 	UPROPERTY()
+	UDataTable* TPActiveGroupTable;
+	UPROPERTY()
 	UDataTable* TPSkillTable;
 #pragma endregion
 
@@ -179,7 +183,7 @@ private:
 
 public:
 	struct FTPCharacterData* GetTPCharacterData(int32 InLevel);
-	TArray<class ATPCharacter*> GetMainCharacter();
+	TArray<TObjectPtr<class ATPCharacter>> GetMainCharacter();
 	bool IsExistMainCharacter();
 
 #pragma endregion
@@ -197,7 +201,7 @@ private:
 public:
 	TObjectPtr<class ATPCharacter> GetNearEnemy(TObjectPtr<class ATPCharacter> IgnoreChar, FVector InFindPos);
 	struct FTPEnemyData* GetTPEnemyData(int32 InIndex);
-	TArray<class ATPCharacter*> GetEnemies();
+	TArray<TObjectPtr< class ATPCharacter>> GetEnemies();
 #pragma endregion
 
 };

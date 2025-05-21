@@ -9,6 +9,7 @@
 #include "Passive/TPPassiveBase.h"
 #include "Passive/TPPassive_AddStat.h"
 #include "Passive/TPPassive_Bullet.h"
+#include "Active/TPActive_Granade.h"
 
 
 void UTPSkillController::InitSkill(FTPSkillInitData& InitInfo, UTPSkillComponent* SkillComp, UTPStageManager* StageMgr)
@@ -25,12 +26,21 @@ void UTPSkillController::InitSkill(FTPSkillInitData& InitInfo, UTPSkillComponent
 			ArrCurSkillObj = GetPassiveObj(InitInfo.SkillLv, StageMgr, CurSkillInfo);
 		}
 			break;
+		case ESkillType::ST_ACTIVE:
+		{
+			// ¿ø·¡´Â ¹ºÁö ±¸ºÐÇØ¾ßµÊ.
+			ArrCurSkillObj = GetActiveObj(InitInfo.SkillLv, StageMgr, CurSkillInfo);
+		}
+			break;
 		default:
 			break;
 	}
+	SetSkillType(CurSkillInfo->SkillType);
+	CurSetupInfo.SkillUseType = CurSkillInfo->SkillUseType;
+
 	TPCHECK(ArrCurSkillObj.Num()>0 );
 	for(auto CurSkill : ArrCurSkillObj)
-		CurSkill->InitSkill(InitInfo.SkillLv, *CurSkillInfo, SkillComp, StageMgr);
+		CurSkill->InitSkill(this, InitInfo.SkillLv, *CurSkillInfo, SkillComp, StageMgr);
 }
 
 void UTPSkillController::ReleaseSkill()
@@ -50,12 +60,18 @@ void UTPSkillController::CheckSkillCondition(float DeltaTime)
 		CurSkill->CheckSkillCondition(DeltaTime);
 }
 
-void UTPSkillController::CheckSkillConditionAfterAction(ESkillConditionType ActionType)
+bool UTPSkillController::CheckSkillConditionAfterAction(ESkillConditionType ActionType)
 {
-	TPCHECK(ArrCurSkillObj.Num() > 0);
-
+	TPCHECK(ArrCurSkillObj.Num() > 0, false);
+	bool result = false;
 	for (auto CurSkill : ArrCurSkillObj)
-		CurSkill->CheckSkillConditionAfterAction(ActionType);
+	{
+		bool curResult = CurSkill->CheckSkillConditionAfterAction(ActionType);
+		if(result == false)
+			result = curResult;
+	}
+
+	return result;
 }
 
 int UTPSkillController::GetEffectValue(ESkillEffectType InEffectType)
@@ -65,6 +81,19 @@ int UTPSkillController::GetEffectValue(ESkillEffectType InEffectType)
 		CurSkill->GetEffectValue(InEffectType);
 	}
 	return INDEX_NONE;
+}
+
+bool UTPSkillController::ReleaseActiveSkill()
+{
+	TPCHECK(ArrCurSkillObj.Num() > 0, false);
+	bool result = false;
+	for (auto CurSkill : ArrCurSkillObj)
+	{
+		bool curResult = CurSkill->ReleaseActiveSkill();
+		if (result == false)
+			result = curResult;
+	}
+	return result;
 }
 
 FString UTPSkillController::_GetSkillLog()
@@ -112,6 +141,35 @@ TArray<TObjectPtr<UTPSkillBase>> UTPSkillController::GetPassiveObj(int InSkillLV
 			break;
 		case ESkillEffectType::SEffect_ADD_FIRE_BULLET_NUM:
 			ArrResult.Add( NewObject<UTPPassive_Bullet>());
+			break;
+		default:
+			break;
+		}
+	}
+	return ArrResult;
+}
+
+TArray<TObjectPtr<UTPSkillBase>> UTPSkillController::GetActiveObj(int InSkillLV, class UTPStageManager* StageMgr, struct FTPSkillTable* Info)
+{
+	TArray<TObjectPtr<UTPSkillBase>> ArrResult;
+	TPCHECK(StageMgr != nullptr, ArrResult);
+	TArray<FTPActiveGroupTable*> ArrCurActiveGroupInfo = StageMgr->GetActiveSkillInfo(Info->GroupID, InSkillLV);
+	TArray<ESkillEffectType> ArrNeedEffectType;
+
+	for (auto CurInfo : ArrCurActiveGroupInfo)
+	{
+		if (ArrNeedEffectType.Find(CurInfo->EffectType) == INDEX_NONE)
+			ArrNeedEffectType.Add(CurInfo->EffectType);
+	}
+
+	TPCHECK(ArrNeedEffectType.Num() > 0, ArrResult);
+
+	for (auto NeedCurType : ArrNeedEffectType)
+	{
+		switch (NeedCurType)
+		{
+		case ESkillEffectType::SEffect_TAKE_DMG:
+			ArrResult.Add(NewObject<UTPActive_Granade>());
 			break;
 		default:
 			break;

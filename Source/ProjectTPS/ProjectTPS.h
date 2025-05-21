@@ -28,7 +28,8 @@ enum class ESkillIndex : uint32 {
 	SI_SPLIT_BULLET				=	1014,
 	SI_BOUNCE_BULLET			=	1015,
 
-
+	// ----------- Active ----------
+	SI_AT_GRANADE				=	2001,
 };
 
 
@@ -69,6 +70,8 @@ enum class ESkillConditionType : uint8 {
 	SCondition_CHARACTER_CURRENT_WEAPON_SG,
 	SCondition_CHARACTER_CURRENT_WEAPON_SR,
 	SCondition_CHARACTER_CURRENT_WEAPON_HG,
+	SCondition_CHARACTER_USE_SKILL,		// 사용 하기위해 경로 보여주기
+	SCondition_CHARACTER_USING_SKILL,	// 실제 사용.
 };
 
 UENUM(BlueprintType)

@@ -40,16 +40,20 @@ ATPCharacter::ATPCharacter()
 	CharacterStat = CreateDefaultSubobject<UTPCharacterStatComponent>(TEXT("CHARACTERSTAT"));
 	SkillComponent = CreateDefaultSubobject<UTPSkillComponent>(TEXT("CHARACTERSKILL"));
 	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
+	GrenadeArcSpline = CreateDefaultSubobject<USplineComponent>(TEXT("GrenadeArcSpline"));
 
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 	GetMesh()->SetCollisionProfileName(TEXT("TPCharacter"), true);
 	Camera->SetupAttachment(SpringArm);
 	HPBarWidget->SetupAttachment(GetMesh());
+	GrenadeArcSpline->SetupAttachment(RootComponent);
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -88.f), FRotator(0.f, -90.f, 0.f));
 
 	SpringArm->TargetArmLength = 100.f;
 	SpringArm->SetRelativeLocation(FVector(0.f, 30.f, 70.f));
 	SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
+
+
 
 // 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_CHAR(TEXT("/Script/Engine.SkeletalMesh'/Game/Characters/Heroes/Mannequin/Meshes/SKM_Quinn.SKM_Quinn'"));
 // 	if (SK_CHAR.Succeeded())
@@ -103,6 +107,7 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 	{
 	case ECharacterState::LOADING:
 	{
+		ReleaseUseSkill();
 		if (bIsPlayer)
 		{
 			DisableInput(TPPlayerController);
@@ -548,14 +553,12 @@ void ATPCharacter::Tick(float DeltaTime)
 	AdjustWeaponHeight();
 
 	
-
+	UpdateArcSplineMesh(DeltaTime);
 	RecoverAccuracy(DeltaTime);
 	LerpRecoil(DeltaTime);
 	LerpAds(DeltaTime);
-	CharacterStat->RecoveryShield(DeltaTime);
-	CharacterStat->RecoveryHP(DeltaTime);
-	if(bIsPlayer)
-		CharacterStat->RecoveryStamina(DeltaTime);
+
+	CharacterStat->Recovery(DeltaTime);
 
 	SkillComponent->TickSkillComponent(DeltaTime);
 }
@@ -647,6 +650,7 @@ void ATPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Released, this, &ATPCharacter::AttackRelease);
 	PlayerInputComponent->BindAction(TEXT("Ads"), EInputEvent::IE_Pressed, this, &ATPCharacter::ChangeAdsMode);
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &ATPCharacter::ReloadAmmo);
+	PlayerInputComponent->BindAction(TEXT("Skill1"), EInputEvent::IE_Pressed, this, &ATPCharacter::UseSkill1);
 }
 
 void ATPCharacter::ReloadAmmo()
@@ -1043,7 +1047,7 @@ FVector ATPCharacter::GetBulletDirection(FVector& BulletPos)
 	float CurAimSize = TPPlayerController->GetHUDWidget()->GetAimImgSize() * AccuacyRatio;
 	float SpreadScreenRatio = CurAimSize / ScreenCenter.X;
 
-
+	
 	float CameraFOV = Camera->FieldOfView; // or Camera->FieldOfView
 	float HalfFOVRadians = FMath::DegreesToRadians(CameraFOV * 0.5f);
 	float AngleRadians = SpreadScreenRatio * HalfFOVRadians;
@@ -1128,6 +1132,12 @@ void ATPCharacter::InputAttack()
 
 bool ATPCharacter::Attack()
 {
+	if (IsSkillReadyToUse)
+	{
+		ClickSkill();
+		return true;
+	}
+
 	if (CurrentWeapon == nullptr || CharacterStat->GetIsReloading() == true || CurrentWeapon->CheckShotBullet() == false)
 		return false;
 
@@ -1165,6 +1175,161 @@ void ATPCharacter::AttackRelease()
 	{
 		ComboAttackRelease();
 	}
+}
+
+
+void ATPCharacter::ShowActiveSkillSpline(float StartPoint, float Velocity, float AngleOffset)
+{
+	SkillReadyStartPoint = StartPoint;
+	SkillReadyVelocity = Velocity;
+	SkillReadyAngleOffset = AngleOffset;
+	SkillReadyUpdateCoolTime = 0.1f;
+
+
+
+	FVector Offset(0, 0, 40);
+	FRotator OffsetRot = GetActorForwardVector().Rotation();
+	OffsetRot.Pitch += SkillReadyAngleOffset;
+	FVector LaunchVelocity = OffsetRot.Vector() * SkillReadyVelocity;
+	FPredictProjectilePathParams PathParams;
+
+
+	PathParams.StartLocation = GetActorLocation() + Offset;
+	PathParams.LaunchVelocity = LaunchVelocity;
+	PathParams.bTraceWithCollision = true;
+	PathParams.ProjectileRadius = 5.f;
+	PathParams.MaxSimTime = 2.f;
+	PathParams.SimFrequency = 15.f;
+	PathParams.TraceChannel = ECC_Visibility;
+	PathParams.ActorsToIgnore.Add(this);
+	PathParams.ActorsToIgnore.Add(CurrentWeapon);
+
+	FPredictProjectilePathResult PathResult;
+	UGameplayStatics::PredictProjectilePath(GetWorld(), PathParams, PathResult);
+
+	GrenadeArcSpline->ClearSplinePoints();
+	for (const FPredictProjectilePathPointData& curPoint : PathResult.PathData)
+		GrenadeArcSpline->AddSplinePoint(curPoint.Location, ESplineCoordinateSpace::World);
+	GrenadeArcSpline->UpdateSpline();
+
+
+	// 기존 메쉬 제거
+	for (auto Comp : SplineMeshes)
+	{
+		if (Comp)
+			Comp->DestroyComponent();
+	}
+	SplineMeshes.Empty();
+
+
+	// Spline 포인트가 충분해야 함
+	const int32 NumPoints = GrenadeArcSpline->GetNumberOfSplinePoints();
+	for (int32 i = 0; i < NumPoints - 1; ++i)
+	{
+		USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this);
+		SplineMesh->SetMobility(EComponentMobility::Movable);
+		SplineMesh->AttachToComponent(GrenadeArcSpline, FAttachmentTransformRules::KeepRelativeTransform);
+
+		FVector2D Scale(0.05f, 0.05f); // X, Y 축 비율 (길이 방향은 Spline 자체에서 조절)
+		SplineMesh->SetStartScale(Scale);
+		SplineMesh->SetEndScale(Scale);
+
+		SplineMesh->RegisterComponent();
+		SplineMesh->SetStaticMesh(ArcMesh);
+		SplineMesh->SetMaterial(0, ArcMaterial);
+
+		FVector StartPos, StartTangent, EndPos, EndTangent;
+		GrenadeArcSpline->GetLocationAndTangentAtSplinePoint(i, StartPos, StartTangent, ESplineCoordinateSpace::Local);
+		GrenadeArcSpline->GetLocationAndTangentAtSplinePoint(i + 1, EndPos, EndTangent, ESplineCoordinateSpace::Local);
+
+		SplineMesh->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent);
+
+		SplineMeshes.Add(SplineMesh);
+	}
+
+	// 땅에 닿은 부분 표현
+	USplineMeshComponent* SplineMeshLast = NewObject<USplineMeshComponent>(this);
+	SplineMeshLast->SetMobility(EComponentMobility::Movable);
+	SplineMeshLast->AttachToComponent(GrenadeArcSpline, FAttachmentTransformRules::KeepRelativeTransform);
+
+	FVector2D Scale(1.f, 1.f); // X, Y 축 비율 (길이 방향은 Spline 자체에서 조절)
+	SplineMeshLast->SetStartScale(Scale);
+	SplineMeshLast->SetEndScale(Scale);
+
+	SplineMeshLast->RegisterComponent();
+	SplineMeshLast->SetStaticMesh(ArcMesh);
+	SplineMeshLast->SetMaterial(0, ArcMaterial);
+
+	FVector StartPos, StartTangent;
+	GrenadeArcSpline->GetLocationAndTangentAtSplinePoint(NumPoints - 1, StartPos, StartTangent, ESplineCoordinateSpace::Local);
+
+	SplineMeshLast->SetStartAndEnd(StartPos, StartTangent, StartPos, StartTangent);
+
+	SplineMeshes.Add(SplineMeshLast);
+}
+
+void ATPCharacter::DisableActiveSkillSpline()
+{
+	GrenadeArcSpline->ClearSplinePoints();
+	GrenadeArcSpline->UpdateSpline();
+}
+
+void ATPCharacter::ReleaseUseSkill()
+{
+	if (IsSkillReadyToUse)
+	{
+		SkillComponent->ReleaseActiveSkill(SkillReadyToUse);
+	}
+	SkillReadyToUse = ESkillIndex::SI_NONE;
+	IsSkillReadyToUse = false;
+	// 기존 메쉬 제거
+	for (auto Comp : SplineMeshes)
+	{
+		if (Comp)
+			Comp->DestroyComponent();
+	}
+	SplineMeshes.Empty();
+}
+
+void ATPCharacter::UseSkill1()
+{
+	if (IsSkillReadyToUse)
+	{
+		// 이전 스킬이 있다면 취소
+		ReleaseUseSkill();
+		return;
+	}
+	SkillReadyToUse = ESkillIndex::SI_AT_GRANADE;
+	IsSkillReadyToUse = SkillComponent->UseActiveSkill(SkillReadyToUse);
+}
+
+void ATPCharacter::ClickSkill()
+{
+	SkillComponent->UseActiveSkill(SkillReadyToUse);
+	ReleaseUseSkill();
+}
+
+void ATPCharacter::UpdateArcSplineMesh(float DeltaTime)
+{
+	if(IsSkillReadyToUse == false)
+		return;
+
+	if (SkillReadyUpdateCoolTime > 0.f)
+	{
+		SkillReadyUpdateCoolTime -= DeltaTime;
+		if(SkillReadyUpdateCoolTime <= 0.f)
+			ShowActiveSkillSpline(SkillReadyStartPoint, SkillReadyVelocity, SkillReadyAngleOffset);
+	}
+
+// 	const int32 NumPoints = GrenadeArcSpline->GetNumberOfSplinePoints();
+// 	for (int32 i = 0; i < NumPoints - 1; ++i)
+// 	{
+// 		FVector StartPos, StartTangent, EndPos, EndTangent;
+// 		GrenadeArcSpline->GetLocationAndTangentAtSplinePoint(i, StartPos, StartTangent, ESplineCoordinateSpace::Local);
+// 		GrenadeArcSpline->GetLocationAndTangentAtSplinePoint(i + 1, EndPos, EndTangent, ESplineCoordinateSpace::Local);
+// 
+// 		SplineMeshes[i]->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent);
+// 	}
 }
 
 void ATPCharacter::PlayHitVFX(const FHitResult& Hit)

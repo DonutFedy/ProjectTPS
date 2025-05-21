@@ -354,6 +354,14 @@ void UTPCharacterStatComponent::SetShield(float NewShield)
 	OnShieldChanged.Broadcast();
 }
 
+void UTPCharacterStatComponent::Recovery(float DeltaTime)
+{
+	RecoveryShield(DeltaTime);
+	RecoveryHP(DeltaTime);
+	if (IsPlayer)
+		RecoveryStamina(DeltaTime);
+}
+
 void UTPCharacterStatComponent::RecoveryShield(float DeltaTime)
 {
 	if (ShieldRestTime > 0)

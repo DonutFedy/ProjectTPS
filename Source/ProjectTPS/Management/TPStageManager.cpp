@@ -19,6 +19,7 @@
 #include "../GamePlay/Skills/TPSkillController.h"
 #include "../TPSkillComponent.h"
 #include "../../../../../../../Source/Runtime/NavigationSystem/Public/NavigationSystem.h"
+#include "../Table/TPSkillTable.h"
 
 
 
@@ -69,6 +70,13 @@ UTPStageManager::UTPStageManager()
 	TPCHECK(DT_PASSIVE_GROUP_TB.Succeeded());
 	TPPassiveGroupTable = DT_PASSIVE_GROUP_TB.Object;
 	TPCHECK(TPPassiveGroupTable->GetRowMap().Num() > 0);
+
+	// 액티브 스킬 테이블 로드
+	FString ActiveGroupDataPath = TEXT("/Script/Engine.DataTable'/Game/Table/InGame/ActiveGroupTable.ActiveGroupTable'");
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_ACTIVE_GROUP_TB(*ActiveGroupDataPath);
+	TPCHECK(DT_ACTIVE_GROUP_TB.Succeeded());
+	TPActiveGroupTable = DT_ACTIVE_GROUP_TB.Object;
+	TPCHECK(TPActiveGroupTable->GetRowMap().Num() > 0);
 }
 
 /*
@@ -520,6 +528,24 @@ TArray<FTPPassiveGroupTable*> UTPStageManager::GetPassiveSkillInfo(int InGroupID
 	return ArrFindData;
 }
 
+TArray<FTPActiveGroupTable*> UTPStageManager::GetActiveSkillInfo(int InGroupID, int InLv)
+{
+	FString ContextString = "Empty Active Skill Group Data";
+	TArray<FTPActiveGroupTable*> ArrFindData;
+	for (const FName& RowName : TPActiveGroupTable->GetRowNames())
+	{
+		FTPActiveGroupTable* FindData = TPActiveGroupTable->FindRow<FTPActiveGroupTable>(RowName, ContextString);
+		if (FindData && FindData->GroupID == InGroupID) // 데이터는 하나밖에없다.
+		{
+			if (FindData->Lv == InLv)
+				ArrFindData.Add(FindData);
+			else if (FindData->Lv > InLv)
+				break;
+		}
+	}
+	return ArrFindData;
+}
+
 ESkillEffectType UTPStageManager::GetEffectType(ESkillType InSkillType, int InGroupID, int InLv)
 {
 	switch (InSkillType)
@@ -695,7 +721,7 @@ struct FTPCharacterData* UTPStageManager::GetTPCharacterData(int32 InLevel)
 	return TPCharacterTable->FindRow<FTPCharacterData>(*FString::FromInt(InLevel), TEXT(""));
 }
 
-TArray<class ATPCharacter*> UTPStageManager::GetMainCharacter()
+TArray<TObjectPtr<ATPCharacter>> UTPStageManager::GetMainCharacter()
 {
 	return ArrPlayers;
 }
@@ -730,7 +756,7 @@ struct FTPEnemyData* UTPStageManager::GetTPEnemyData(int32 InIndex)
 	return TPEnemyTable->FindRow<FTPEnemyData>(*FString::FromInt(InIndex), TEXT(""));
 }
 
-TArray<class ATPCharacter*> UTPStageManager::GetEnemies()
+TArray<TObjectPtr<ATPCharacter>> UTPStageManager::GetEnemies()
 {
 	return ArrEnemies;
 }

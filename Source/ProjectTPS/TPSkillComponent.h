@@ -22,6 +22,9 @@ public:
 	void AddSkill(FTPSkillInitData& InAddSkillInfo);
 	void RemoveSkill(int RemoveSkillIndex);
 
+	bool UseActiveSkill(ESkillIndex SkillIndex);
+	bool ReleaseActiveSkill(ESkillIndex SkillIndex);
+
 	void TrigSkillCondition(ESkillConditionType InCheckSkillTriggerType);// 특정 컨디션에 해당되는 스킬들을 트리거 시킨다.
 	bool IsHaveSkill(ESkillIndex SkillIndex);
 	int GetSkillLevel(ESkillIndex SkillIndex);

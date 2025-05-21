@@ -84,11 +84,42 @@ void UTPSkillComponent::RemoveSkill(int RemoveSkillIndex)
 	TPLOG(Warning, TEXT("Remove Skill %d"), RemoveSkillIndex);
 }
 
+bool UTPSkillComponent::UseActiveSkill(ESkillIndex SkillIndex)
+{
+	int FindSkillIndex = (int)SkillIndex;
+	for (auto SkillCon : ArrSkillController)
+	{
+		if (SkillCon
+		&& SkillCon->GetSkillType() == ESkillType::ST_ACTIVE
+		&& SkillCon->GetSkillIndex() == FindSkillIndex)
+		{
+			return SkillCon->CheckSkillConditionAfterAction(ESkillConditionType::SCondition_CHARACTER_USE_SKILL);
+		}
+	}
+	return false;
+}
+
+
+bool UTPSkillComponent::ReleaseActiveSkill(ESkillIndex SkillIndex)
+{
+	int FindSkillIndex = (int)SkillIndex;
+	for (auto SkillCon : ArrSkillController)
+	{
+		if (SkillCon
+			&& SkillCon->GetSkillType() == ESkillType::ST_ACTIVE
+			&& SkillCon->GetSkillIndex() == FindSkillIndex)
+		{
+			return SkillCon->ReleaseActiveSkill();
+		}
+	}
+	return false;
+}
+
 void UTPSkillComponent::TrigSkillCondition(ESkillConditionType InCheckSkillTriggerType)
 {
 	for (auto SkillCon : ArrSkillController)
 	{
-		if (SkillCon) SkillCon->CheckSkillConditionAfterAction(InCheckSkillTriggerType);
+		if (SkillCon && SkillCon->GetSkillType() == ESkillType::ST_PASSIVE) SkillCon->CheckSkillConditionAfterAction(InCheckSkillTriggerType);
 	}
 }
 

@@ -67,3 +67,44 @@ struct PROJECTTPS_API FTPPassiveGroupTable : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float EffectCooldown; // 재사용 쿨타임
 };
+
+
+/**
+ * 
+ */
+USTRUCT(BlueprintType)
+struct PROJECTTPS_API FTPActiveGroupTable : public FTableRowBase
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int GroupID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString SkillDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Lv;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillConditionType ConditionType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ConditionValue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillEffectType EffectType; // 효과 타입
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EffectValue; // 효과 값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillTargetType TargetType; // 타겟 타입
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TargetValue; // 타겟 값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillAreaType AreaType; // 원/네모/직선 등
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EffectDuration; // 효과 지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TickTime; // 반복시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float UseCooldown; // 재사용 쿨타임
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int UseCount; // 총 사용 가능 횟수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float UseStamina; // 총 사용 스테미너
+};

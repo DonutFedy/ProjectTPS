@@ -7,18 +7,6 @@
 #include "UObject/NoExportTypes.h"
 #include "TPPassiveBase.generated.h"
 
-USTRUCT(BlueprintType)
-struct FTPSkillConditionInfo
-{
-	GENERATED_BODY()
-public:
-	FTPSkillConditionInfo():CurRemainCoolTime(0.f), CurEffectDuration(0.f), IsApply(false)
-	{
-	}
-	float CurRemainCoolTime;// 해당 시간이 0이되면 조건 체크
-	float CurEffectDuration; // 효과 지속시간
-	bool IsApply;
-};
 
 /**
  * 
@@ -45,6 +33,5 @@ protected:
 	TArray<FTPPassiveGroupTable*> CurPassiveInfo;
 
 
-	TArray<FTPSkillConditionInfo> ArrCurSkillConditionInfo; 
 	
 };

@@ -21,14 +21,21 @@ public:
 
 	// 스킬의 발동 여부 체크.
 	void CheckSkillCondition(float DeltaTime);
-	void CheckSkillConditionAfterAction(ESkillConditionType ActionType); // 특정 액션후 불리는 함수.
+	bool CheckSkillConditionAfterAction(ESkillConditionType ActionType); // 특정 액션후 불리는 함수.
 	int GetSkillIndex(){ return CurSetupInfo.SkillIndex;}
 	int GetSkillLv(){ return CurSetupInfo.SkillLv;}
+	ESkillType GetSkillType(){ return CurSetupInfo.SkillType;}
+	bool IsNeedToReady(){ return CurSetupInfo.SkillUseType == ESkillUseType::SUT_CONFIRM; }
+
+	void SetSkillType(ESkillType InType) {CurSetupInfo.SkillType = InType; }
 	int GetEffectValue(ESkillEffectType InEffectType);
+
+	bool ReleaseActiveSkill();	// 발동 취소
 
 	FString _GetSkillLog();
 protected:
 	TArray<TObjectPtr<class UTPSkillBase>> GetPassiveObj(int InSkillLV, class UTPStageManager* StageMgr, struct FTPSkillTable* Info);
+	TArray<TObjectPtr<class UTPSkillBase>> GetActiveObj(int InSkillLV, class UTPStageManager* StageMgr, struct FTPSkillTable* Info);
 
 public:
 protected:

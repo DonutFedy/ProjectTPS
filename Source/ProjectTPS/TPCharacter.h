@@ -5,6 +5,8 @@
 #include "ProjectTPS.h"
 #include "GameFramework/Character.h"
 #include "../../../../../../../Source/Runtime/Engine/Classes/Sound/SoundCue.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Components/SplineComponent.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Components/SplineMeshComponent.h"
 #include "TPCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
@@ -37,6 +39,8 @@ public:
 	void SetEnemyInfo(struct FTPEnemyData* InfoData);
 	void PlayStage();
 
+
+	bool IsPlayer(){return bIsPlayer;}
 
 	void AddSkill(struct FTPSkillInitData& InAddSkillInfo);
 	void RemoveSkill(int RemoveSkillIndex);
@@ -291,9 +295,52 @@ public:
 //============================ATTACK end==========================
 #pragma endregion
 
+	//============================Skill==========================
+#pragma region Skill
+
+public:
+	void ShowActiveSkillSpline(float StartPoint, float Velocity, float AngleOffset);
+	void DisableActiveSkillSpline();
+	TObjectPtr<USplineComponent> GetSplineComp(){return GrenadeArcSpline;}
+
+	void ReleaseUseSkill();
+	void UseSkill1();
+	void ClickSkill();
+protected:
+	void UpdateArcSplineMesh(float DeltaTime);
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USplineComponent> GrenadeArcSpline;
+	
+	UPROPERTY(VisibleAnywhere)
+	float SkillReadyStartPoint;
+	UPROPERTY(VisibleAnywhere)
+	float SkillReadyVelocity;
+	UPROPERTY(VisibleAnywhere)
+	float SkillReadyAngleOffset;
+	UPROPERTY(VisibleAnywhere)
+	float SkillReadyUpdateCoolTime;
+	UPROPERTY(VisibleAnywhere)
+	bool IsSkillReadyToUse; // 스킬 사용 전인지 체크.
+	ESkillIndex SkillReadyToUse; // 스킬 사용 전인지 체크용. skill index
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* ArcMesh; // Cylinder 같은 단순 메쉬를 추천
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* ArcMaterial;
+
+	UPROPERTY()
+	TArray<TObjectPtr<USplineMeshComponent>> SplineMeshes;
+#pragma endregion
+	//============================Skill end==========================
+
+
+
 //============================VFX==========================
 #pragma region VFX
-	
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
 	TArray<TObjectPtr<class UNiagaraSystem>> ArrHitVFX;
 public:

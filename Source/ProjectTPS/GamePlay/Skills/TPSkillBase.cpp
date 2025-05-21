@@ -3,12 +3,14 @@
 
 #include "TPSkillBase.h"
 #include "../../Management/TPStageManager.h"
+#include "TPSkillController.h"
 
 int UTPSkillBase::SkillGenerateIndex = 0;
 
-void UTPSkillBase::InitSkill(int Lv, FTPSkillTable& CurSkillTableInfo, TObjectPtr<UTPSkillComponent> SkillComp, UTPStageManager* StageMgr)
+void UTPSkillBase::InitSkill(TObjectPtr<UTPSkillController> SkillController, int Lv, FTPSkillTable& CurSkillTableInfo, TObjectPtr<UTPSkillComponent> SkillComp, UTPStageManager* StageMgr)
 {
 	SkillSerializeIndex = ++SkillGenerateIndex;
+	CurSkillController = SkillController;
 	CurOwnerStatComp = SkillComp;
 	CurLV = Lv;
 	CurSkillInfo = CurSkillTableInfo;

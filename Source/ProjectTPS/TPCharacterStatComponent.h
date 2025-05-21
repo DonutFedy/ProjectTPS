@@ -148,6 +148,8 @@ public:
 	void RecoveryStamina(float DeltaTime);
 	bool UseStamina(float UsingStamina);
 	void SetShield(float NewShield);
+
+	void Recovery(float DeltaTime);
 	void RecoveryShield(float DeltaTime);
 	void RecoveryHP(float DeltaTime);
 	bool UseShield(float UsingShield);
