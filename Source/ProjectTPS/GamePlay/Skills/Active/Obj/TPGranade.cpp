@@ -8,9 +8,9 @@
 #include "../../../../TPGameInstance.h"
 #include "../../../../Management/TPStageManager.h"
 #include "../TPActiveBase.h"
-#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
-#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraComponent.h"
-#include "../../../../../../../../../../../engine/UE_5.54/UE_5.4/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
+#include "Niagara/Public/NiagaraComponent.h"
+#include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 // Sets default values
 ATPGranade::ATPGranade()
