@@ -12,5 +12,9 @@ void UTPPassive_AddStat::RunSkill(int EffectIndex)
 
 	TPCHECK(CurOwnerStatComp != nullptr);
 
-	ArrCurSkillConditionInfo[EffectIndex].IsApply = CurOwnerStatComp->AddBuf(SkillSerializeIndex, *CurPassiveInfo[EffectIndex]);
+	FTPBufInfo newBufInfo;
+	newBufInfo.EffectDuration = CurPassiveInfo[EffectIndex]->EffectDuration;
+	newBufInfo.EffectValue = CurPassiveInfo[EffectIndex]->EffectValue;
+	newBufInfo.EffectType = CurPassiveInfo[EffectIndex]->EffectType;
+	ArrCurSkillConditionInfo[EffectIndex].IsApply = CurOwnerStatComp->AddBuf(SkillSerializeIndex, newBufInfo);
 }

@@ -32,6 +32,19 @@ struct PROJECTTPS_API FTPSkillTable : public FTableRowBase
 	FString SkillBP_Path;
 };
 
+USTRUCT(BlueprintType)
+struct PROJECTTPS_API FTPBufInfo : public FTableRowBase
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EffectDuration; // 효과 지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EffectValue; // 효과 값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillEffectType EffectType; // 효과 타입
+};
+
+
 /**
  * 
  */

@@ -98,11 +98,14 @@ private:
 
 
 #pragma region Chapter & Stage
+	bool isItemLoad;
+	bool isStageLoad;
 public:
 	void SetManagerStep(EStageManagerStep NewStep);
 protected:
 	FString GetStageName();
 	void SetNextChapter();
+	void ReturnAllItems();
 	void SetNextStage();
 	void OpenGate();
 protected:
@@ -113,8 +116,10 @@ public:
 protected:
 	void StageLoad(); // 다음 스테이지를 로드.
 public:
+	void CheckLoadComplete();
 	UFUNCTION()
 	void OnCompletedLoadStage();
+	void OnCompletedLoadItem();
 protected:
 	void CharacterLoad();
 	void NextWave(); // Enemy Load & Set
@@ -202,6 +207,25 @@ public:
 	TObjectPtr<class ATPCharacter> GetNearEnemy(TObjectPtr<class ATPCharacter> IgnoreChar, FVector InFindPos);
 	struct FTPEnemyData* GetTPEnemyData(int32 InIndex);
 	TArray<TObjectPtr< class ATPCharacter>> GetEnemies();
+#pragma endregion
+
+#pragma region Items
+private:
+
+	int needAllItemCounts = 0;
+	int loadCompletedItemCount = 0;
+
+	UPROPERTY()
+	TArray<TObjectPtr<class ATPItem>> ArrUsingItems;
+	UPROPERTY()
+	TArray<TObjectPtr<class ATPItem>> ArrPoolingItems;
+	
+public:
+	void ReturnItemObj(TObjectPtr<class ATPItem> inReturnItem);
+	TObjectPtr<class ATPItem> GetTempItem(/*나중에 타입 추가*/);
+	TArray<TObjectPtr< class ATPItem>> GetItems();
+protected:
+	void ReleaseAllItems();
 #pragma endregion
 
 };

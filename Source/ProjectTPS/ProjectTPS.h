@@ -30,6 +30,8 @@ enum class ESkillIndex : uint32 {
 
 	// ----------- Active ----------
 	SI_AT_GRANADE				=	2001,
+	SI_AT_ATTACK_BUF			=	2002,
+	SI_AT_HEAL					=	2003,
 };
 
 

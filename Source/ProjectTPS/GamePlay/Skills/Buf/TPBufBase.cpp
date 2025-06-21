@@ -4,19 +4,22 @@
 #include "TPBufBase.h"
 #include "../../../TPSkillComponent.h"
 
-void UTPBufBase::InitBuf(FTPPassiveGroupTable& CurPassiveInfo, TObjectPtr<UTPSkillComponent> InSkillComp)
+void UTPBufBase::InitBuf(FTPBufInfo& CurBufInfo, TObjectPtr<UTPSkillComponent> InSkillComp)
 {
 	SkillComp = InSkillComp;
-	AddEffect(CurPassiveInfo);
+	AddEffect(CurBufInfo);
 }
 
-bool UTPBufBase::AddEffect(FTPPassiveGroupTable& CurPassiveInfo)
+bool UTPBufBase::AddEffect(FTPBufInfo& CurBufInfo)
 {
 	FTPEffectInfo NewEffect;
-	NewEffect._BufDuration = CurPassiveInfo.EffectDuration;
-	NewEffect.StatValue = CurPassiveInfo.EffectValue;
-	switch (CurPassiveInfo.EffectType)
+	NewEffect._BufDuration = CurBufInfo.EffectDuration;
+	NewEffect.StatValue = CurBufInfo.EffectValue;
+	switch (CurBufInfo.EffectType)
 	{
+	case ESkillEffectType::SEffect_ADD_WEAPON_ATK:
+		NewEffect.StatType = EBufStatType::BST_WEAPON_ATTACK;
+		break;
 	case ESkillEffectType::SEffect_ADD_CHARACTER_STAT_SHIELDMAX:
 		NewEffect.StatType = EBufStatType::BST_SHIELD_MAX;
 		break;

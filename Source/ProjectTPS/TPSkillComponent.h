@@ -38,7 +38,7 @@ public:
 
 	// return : 할당된 버프 index  
 	// SkillSerializeIndex : 각 스킬들 할당된 고유값.
-	bool AddBuf(int SkillSerializeIndex , FTPPassiveGroupTable& NewBufInfo);
+	bool AddBuf(int SkillSerializeIndex , FTPBufInfo& NewBufInfo);
 	void RemoveEffect(int SkillSerializeIndex, ESkillEffectType InRemoveTargetType);
 	
 	TObjectPtr<UTPCharacterStatComponent> GetCharStatComp(){return spStatComp;}

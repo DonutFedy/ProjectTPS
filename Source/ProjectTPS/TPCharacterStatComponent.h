@@ -129,6 +129,13 @@ public:
 
 	void CallProcessBufStat(EBufStatType InBufType);
 
+#pragma region item
+public:
+	void AddExp(float inExp);
+	void _TestLog(float DeltaTime);
+#pragma endregion
+
+public:
 private:
 	float GetHPMax();
 	float GetHPRecover();
@@ -144,6 +151,7 @@ public:
 	void SetAI(int32 InAIIndex, class ATPCharacter* CurrentChar);
 	void SetDamage(float NewDamage);
 	void SetHP(float NewHP);
+	void RecoverHP(float value);
 	void SetStamina(float NewStamina);
 	void RecoveryStamina(float DeltaTime);
 	bool UseStamina(float UsingStamina);
@@ -219,6 +227,8 @@ private:
 #pragma region Current Stat / Transient
 
 	//=======================저장 필요없는 현재 상황======================
+	UPROPERTY(Transient, VisibleInstanceOnly, Category=Stat, Meta = (AllowPrivateAccess = true))
+	float CurrentExp;
 
 	UPROPERTY(Transient, VisibleInstanceOnly, Category=Stat, Meta = (AllowPrivateAccess = true))
 	float CurrentHP;

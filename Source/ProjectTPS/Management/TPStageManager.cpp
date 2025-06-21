@@ -20,6 +20,8 @@
 #include "../TPSkillComponent.h"
 #include "../../../../../../../Source/Runtime/NavigationSystem/Public/NavigationSystem.h"
 #include "../Table/TPSkillTable.h"
+#include "../Item/TPItem.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Engine/AssetManager.h"
 
 
 
@@ -105,6 +107,8 @@ UTPStageManager::UTPStageManager()
 void UTPStageManager::InitManager(class UTPGameInstance* InGameInstance)
 {
 	GameInstance = InGameInstance;
+	isStageLoad = false;
+	isItemLoad = false;
 	SetManagerStep(EStageManagerStep::SMS_INIT);
 }
 
@@ -128,6 +132,7 @@ void UTPStageManager::TickManager(float deltaTime)
 			SetManagerStep(EStageManagerStep::SMS_PLAY_WAVE);
 		}
 	}
+	CheckLoadComplete();
 }
 
 void UTPStageManager::SetNextChapter()
@@ -137,6 +142,8 @@ void UTPStageManager::SetNextChapter()
 		CurrentChapterIndex = ChapterIndexMax;
 
 	// 테이블에서 현재 챕터의 데이터를 가져온다.
+
+	needAllItemCounts = 0;
 
 	FString ContextString = "Empty Chapter Data";
 	FTPChapterTable* FindData = nullptr;
@@ -161,6 +168,11 @@ void UTPStageManager::SetNextChapter()
 			if (FindStageData 
 			&& FindStageData->Chapter == FindData->Chapter)
 			{
+				for(auto enemyInfo : FindStageData->SpawnEnemies)
+				{
+					needAllItemCounts += enemyInfo.Count;
+				}
+
 				CurChapterStages.Add(*FindStageData);
 				FindMaxStage = FMath::Max(FindMaxStage , FindStageData->Stage);
 			}
@@ -206,8 +218,30 @@ void UTPStageManager::CharacterLoad()
 	}
 }
 
+void UTPStageManager::ReturnAllItems()
+{
+	auto mainChars = GetMainCharacter();
+	if (mainChars.Num())
+	{
+		TPCHECK(mainChars.Num() > 0)
+			// 모든 아이템 획득
+			auto curItems = GetItems();
+		for (auto curItem : curItems)
+		{
+			curItem->TakeToCharacter(mainChars[0]);
+		}
+
+		// 모든 아이템 회수
+		ReleaseAllItems();
+	}
+
+}
+
 void UTPStageManager::SetNextStage()
 {
+	//모든 아이템 획득 및 수거
+	ReturnAllItems();
+
 	++CurrentStageNum;
 	if(CurrentStageNum> StageIndexMax)
 		CurrentStageNum =  StageIndexMax;
@@ -294,51 +328,98 @@ void UTPStageManager::StageLoad()
 		false, // Should Block on Load (false로 설정하여 비동기 로드)
 		LatentInfo
 	);
+
+
+	FSoftObjectPath ItemPath("/Game/Item/ExpItem.ExpItem_C");
+	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+
+	Streamable.RequestAsyncLoad(
+		ItemPath,
+		FStreamableDelegate::CreateUObject(
+			this, &UTPStageManager::OnCompletedLoadItem
+		)
+	);
+}
+
+void UTPStageManager::CheckLoadComplete()
+{
+	if (isStageLoad && isItemLoad)
+	{
+		isStageLoad = false;
+		isItemLoad = false;
+
+		CharacterLoad();
+
+		// GetSpawnObj
+		CurStageSpawner.Empty();
+		CurStageGateSpawner = nullptr;
+
+		UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GameInstance->GetWorld());
+		if (NavSys)
+		{
+			NavSys->Build();
+		}
+		if (StageGate == nullptr)
+		{
+			FString GatePath = "/Script/Engine.Blueprint'/Game/Blueprints/BP_StageGate.BP_StageGate_C'";
+			StageGate = GameInstance->GetWorld()->SpawnActor<ATPStageGate>(LoadClass<ATPStageGate>(nullptr, *GatePath));
+			TPCHECK(StageGate != nullptr);
+			if (StageGate != nullptr)
+				StageGate->SetEnableCollision(false);
+		}
+
+		for (ULevel* Level : GameInstance->GetWorld()->GetLevels())
+		{
+			if (Level && Level->GetOuter()->GetName().Contains(*CurrentStageName))
+			{
+				for (AActor* Actor : Level->Actors)
+				{
+					if (!Actor) continue;
+					ATPEnemySpawner* CurSpawner = Cast<ATPEnemySpawner>(Actor);
+					if (CurSpawner == nullptr)
+						continue;
+					if (CurSpawner->CurSpawnerType == ESpawnerType::EST_ENEMY)
+						CurStageSpawner.Add(CurSpawner->GetSpawnIndex(), CurSpawner);
+					else if (CurSpawner->CurSpawnerType == ESpawnerType::EST_GATE)
+						CurStageGateSpawner = CurSpawner;
+				}
+			}
+		}
+
+
+		SetManagerStep(EStageManagerStep::SMS_LOAD_COMPLETE);
+		//NextWave();
+	}
 }
 
 void UTPStageManager::OnCompletedLoadStage()
 {
-	CharacterLoad();
+	isStageLoad = true;
+}
 
-	// GetSpawnObj
-	CurStageSpawner.Empty();
-	CurStageGateSpawner = nullptr;
+void UTPStageManager::OnCompletedLoadItem()
+{
+	//--loadCompletedItemCount;
 
-	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GameInstance->GetWorld());
-	if (NavSys)
-	{
-		NavSys->Build();
-	}
-	if (StageGate == nullptr)
-	{
-		FString GatePath = "/Script/Engine.Blueprint'/Game/Blueprints/BP_StageGate.BP_StageGate_C'";
-		StageGate = GameInstance->GetWorld()->SpawnActor<ATPStageGate>(LoadClass<ATPStageGate>(nullptr, *GatePath));
-		TPCHECK(StageGate != nullptr);
-		if (StageGate != nullptr)
-			StageGate->SetEnableCollision(false);
-	}
+	FSoftObjectPath ItemPath("/Game/Item/ExpItem.ExpItem_C");
+	TSoftClassPtr<UObject> SoftClass(ItemPath);
 
-	for (ULevel* Level : GameInstance->GetWorld()->GetLevels())
+	for (int i = 0; i < needAllItemCounts; ++i)
 	{
-		if (Level && Level->GetOuter()->GetName().Contains(*CurrentStageName))
+		AActor* SpawnedActor = GameInstance->GetWorld()->SpawnActor<AActor>(SoftClass.Get(), FVector::ZeroVector, FRotator::ZeroRotator);
+
+		if (SpawnedActor)
 		{
-			for (AActor* Actor : Level->Actors)
-			{
-				if (!Actor) continue;
-				ATPEnemySpawner* CurSpawner = Cast<ATPEnemySpawner>(Actor);
-				if(CurSpawner == nullptr)
-					continue;
-				if(CurSpawner->CurSpawnerType == ESpawnerType::EST_ENEMY)
-					CurStageSpawner.Add(CurSpawner->GetSpawnIndex(),CurSpawner);
-				else if(CurSpawner->CurSpawnerType == ESpawnerType::EST_GATE)
-					CurStageGateSpawner = CurSpawner;
-			}
+			TObjectPtr<ATPItem> curNewItem = Cast<ATPItem>(SpawnedActor);
+			ArrPoolingItems.Add(curNewItem);
 		}
 	}
+	isItemLoad = true;
 
-
-	SetManagerStep(EStageManagerStep::SMS_LOAD_COMPLETE);
-	//NextWave();
+// 	if (loadCompletedItemCount <= 0)
+// 	{
+// 		isItemLoad = true;
+// 	}
 }
 
 void UTPStageManager::NextWave()
@@ -759,4 +840,38 @@ struct FTPEnemyData* UTPStageManager::GetTPEnemyData(int32 InIndex)
 TArray<TObjectPtr<ATPCharacter>> UTPStageManager::GetEnemies()
 {
 	return ArrEnemies;
+}
+
+void UTPStageManager::ReturnItemObj(TObjectPtr<class ATPItem> inReturnItem)
+{
+	if(ArrPoolingItems.Contains(inReturnItem) == false)
+		ArrPoolingItems.Add(inReturnItem);
+	if (ArrUsingItems.Contains(inReturnItem))
+		ArrUsingItems.Remove(inReturnItem);
+}
+
+TObjectPtr<ATPItem> UTPStageManager::GetTempItem(/*나중에 타입 추가*/)
+{
+	TObjectPtr<ATPItem> newItemObj(nullptr);
+	if (ArrPoolingItems.Num())
+	{
+		newItemObj = ArrPoolingItems.Last();
+		ArrPoolingItems.Remove(newItemObj);
+		ArrUsingItems.Add(newItemObj);
+	}
+	return newItemObj;
+}
+
+TArray<TObjectPtr< ATPItem>> UTPStageManager::GetItems()
+{
+	return ArrUsingItems;
+}
+
+void UTPStageManager::ReleaseAllItems()
+{
+	for (auto returnItem : ArrUsingItems)
+	{
+		ArrPoolingItems.Add(returnItem);
+	}
+	ArrUsingItems.Empty();
 }

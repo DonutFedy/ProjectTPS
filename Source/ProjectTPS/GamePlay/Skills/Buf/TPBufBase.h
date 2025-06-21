@@ -34,8 +34,8 @@ class PROJECTTPS_API UTPBufBase : public UObject
 {
 	GENERATED_BODY()
 public:
-	virtual void InitBuf(FTPPassiveGroupTable& CurPassiveInfo, TObjectPtr<class UTPSkillComponent> InSkillComp);
-	virtual bool AddEffect(FTPPassiveGroupTable& CurPassiveInfo);
+	virtual void InitBuf(FTPBufInfo& CurPassiveInfo, TObjectPtr<class UTPSkillComponent> InSkillComp);
+	virtual bool AddEffect(FTPBufInfo& CurPassiveInfo);
 	virtual void CheckBufTime(float DeltaTime);
 
 	// return 이 true면 버프 완전 제거다.

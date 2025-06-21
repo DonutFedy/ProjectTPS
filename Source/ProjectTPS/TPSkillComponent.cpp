@@ -225,19 +225,29 @@ void UTPSkillComponent::_TestLog(float DeltaTime)
 
 }
 
-bool UTPSkillComponent::AddBuf(int SkillSerializeIndex, FTPPassiveGroupTable& NewBufInfo)
+bool UTPSkillComponent::AddBuf(int SkillSerializeIndex, FTPBufInfo& NewBufInfo)
 {
 	// 버프 세팅
 	if (MapBuf.Find(SkillSerializeIndex))
 	{
+		FTPBufInfo newBufInfo;
+
+		newBufInfo = NewBufInfo;
+// 		newBufInfo.EffectValue = NewBufInfo.EffectValue;
+// 		newBufInfo.EffectType = NewBufInfo.EffectType;
 		// 기존 버프에 추가한다.
-		MapBuf[SkillSerializeIndex]->AddEffect(NewBufInfo);
+		MapBuf[SkillSerializeIndex]->AddEffect(newBufInfo);
 		return true;
 	}
 	else
 	{
+		FTPBufInfo newBufInfo;
+
+		newBufInfo.EffectDuration = NewBufInfo.EffectDuration;
+		newBufInfo.EffectValue = NewBufInfo.EffectValue;
+		newBufInfo.EffectType = NewBufInfo.EffectType;
 		TObjectPtr<UTPBufBase> NewBuf = NewObject<UTPBufBase>();
-		NewBuf->InitBuf(NewBufInfo, this);
+		NewBuf->InitBuf(newBufInfo, this);
 		// 버프 등록
 		MapBuf.Add(SkillSerializeIndex, NewBuf);
 		return true;

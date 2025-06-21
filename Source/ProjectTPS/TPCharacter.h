@@ -24,6 +24,7 @@ public:
 	ECharacterState GetCharacterState() const;
 	//  [3/21/2025 ehgns] »óÅÂ°ª end
 
+
 	int32 GetExp() const;
 	float GetFinalAttackRange() const;
 	float GetFinalAttackAngle() const;
@@ -61,6 +62,16 @@ protected:
 
 
 public:	
+#pragma region Item
+	void TakeItem(TObjectPtr<class ATPItem> inItem);
+	void DropItem();
+private:
+	bool isDropItem;
+public:
+#pragma endregion
+
+
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
@@ -78,7 +89,7 @@ public:
 	void SetWeapon(class ATPWeapon* NewWeapon);
 	UPROPERTY(VisibleAnywhere, Category=Weapon)
 	class ATPWeapon* CurrentWeapon;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Weapon)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Weapon, Meta = (AllowPrivateAccess = true))
 	TSubclassOf<ATPWeapon> DefaultWeapon;
 	float FireAnimSpd;
 	float BulletSpd;
@@ -303,8 +314,10 @@ public:
 	void DisableActiveSkillSpline();
 	TObjectPtr<USplineComponent> GetSplineComp(){return GrenadeArcSpline;}
 
+
 	void ReleaseUseSkill();
 	void UseSkill1();
+	void UseSkill2();
 	void ClickSkill();
 protected:
 	void UpdateArcSplineMesh(float DeltaTime);

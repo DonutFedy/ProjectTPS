@@ -28,6 +28,7 @@
 #include "Niagara/Public/NiagaraFunctionLibrary.h"
 #include "Table/TPCharacterData.h"
 #include "Table/TPEnemyData.h"
+#include "Item/TPItem.h"
 
 // Sets default values
 ATPCharacter::ATPCharacter()
@@ -121,6 +122,7 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 		}
 		else
 		{
+			isDropItem = false;
 // 			auto ABGameMode = Cast<ATPGameMode>(GetWorld()->GetAuthGameMode());
 // 			TPCHECK(ABGameMode != nullptr);
 // 			int32 TargetLevel = FMath::CeilToInt((float)ABGameMode->GetScore() * 0.8f);
@@ -232,11 +234,8 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 			}
 			else
 			{
-				
 				//Destroy();
-
-
-
+				DropItem();
 			}
 
 			if(CurrentWeapon->IsValidLowLevel())
@@ -261,6 +260,21 @@ void ATPCharacter::SetCharacterState(ECharacterState NewState)
 ECharacterState ATPCharacter::GetCharacterState() const
 {
 	return CurrentState;
+}
+
+void ATPCharacter::DropItem()
+{
+	if(isDropItem)
+		return;
+	if (bIsPlayer)
+		return;
+	//Destroy();
+	auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	TPCHECK(TPGameInstance != nullptr);
+	TObjectPtr< UTPStageManager> StageMgr = TPGameInstance->GetStageManager();
+	TObjectPtr<ATPItem> curNewItem = StageMgr->GetTempItem();
+	// 원래는 값 세팅해줘야함.
+	curNewItem->SetItem(GetActorLocation());
 }
 
 int32 ATPCharacter::GetExp() const
@@ -542,6 +556,12 @@ void ATPCharacter::SetControlMode(EControlMode ControlMode)
 	}
 }
 
+void ATPCharacter::TakeItem(TObjectPtr< ATPItem> inItem)
+{
+	// 나중에 제대로된 정보가 있어야됨.
+	CharacterStat->AddExp(10);
+}
+
 // Called every frame
 void ATPCharacter::Tick(float DeltaTime)
 {
@@ -560,6 +580,7 @@ void ATPCharacter::Tick(float DeltaTime)
 
 	CharacterStat->Recovery(DeltaTime);
 
+	CharacterStat->_TestLog(DeltaTime);
 	SkillComponent->TickSkillComponent(DeltaTime);
 }
 
@@ -607,6 +628,8 @@ float ATPCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 
 void ATPCharacter::OnDestroyed()
 {
+
+
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->Destroy();
@@ -651,6 +674,7 @@ void ATPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Ads"), EInputEvent::IE_Pressed, this, &ATPCharacter::ChangeAdsMode);
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &ATPCharacter::ReloadAmmo);
 	PlayerInputComponent->BindAction(TEXT("Skill1"), EInputEvent::IE_Pressed, this, &ATPCharacter::UseSkill1);
+	PlayerInputComponent->BindAction(TEXT("Skill2"), EInputEvent::IE_Pressed, this, &ATPCharacter::UseSkill2);
 }
 
 void ATPCharacter::ReloadAmmo()
@@ -1300,6 +1324,19 @@ void ATPCharacter::UseSkill1()
 		return;
 	}
 	SkillReadyToUse = ESkillIndex::SI_AT_GRANADE;
+	IsSkillReadyToUse = SkillComponent->UseActiveSkill(SkillReadyToUse);
+}
+
+void ATPCharacter::UseSkill2()
+{
+	if (IsSkillReadyToUse)
+	{
+		// 이전 스킬이 있다면 취소
+		ReleaseUseSkill();
+		return;
+	}
+	//SkillReadyToUse = ESkillIndex::SI_AT_ATTACK_BUF;
+	SkillReadyToUse = ESkillIndex::SI_AT_HEAL;
 	IsSkillReadyToUse = SkillComponent->UseActiveSkill(SkillReadyToUse);
 }
 

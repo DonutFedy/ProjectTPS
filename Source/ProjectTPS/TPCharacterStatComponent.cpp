@@ -43,6 +43,8 @@ void UTPCharacterStatComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 void UTPCharacterStatComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
+
+	CurrentExp = 0.f;
 }
 
 void UTPCharacterStatComponent::CallProcessBufStat(EBufStatType InBufType)
@@ -91,6 +93,42 @@ void UTPCharacterStatComponent::CallProcessBufStat(EBufStatType InBufType)
 		break;
 	default:
 		break;
+	}
+}
+
+void UTPCharacterStatComponent::AddExp(float inExp)
+{
+	CurrentExp += inExp;
+}
+
+void UTPCharacterStatComponent::_TestLog(float DeltaTime)
+{
+	FVector vLogPos = GetOwnChar()->GetActorLocation() + GetOwnChar()->GetActorRightVector() * -25 + FVector(10.f, 0.f, 100.f);
+
+	FString strAllLog = FString::Printf(TEXT("Exp : %0.1f"), CurrentExp);
+
+	DrawDebugString(
+		GetWorld(),
+		vLogPos,          // 표시할 위치
+		*strAllLog,           // 표시할 텍스트
+		nullptr,                         // 소유 액터 (없으면 nullptr)
+		FColor::Red,                    // 텍스트 색상
+		DeltaTime,                            // 지속 시간
+		true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
+	);
+
+}
+
+void UTPCharacterStatComponent::RecoverHP(float value)
+{
+	if (GetHPMax() > CurrentHP)
+	{
+		CurrentHP += value;
+		if (GetHPMax() < CurrentHP)
+		{
+			CurrentHP = GetHPMax();
+		}
+		OnHPChanged.Broadcast();
 	}
 }
 

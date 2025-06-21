@@ -10,6 +10,8 @@
 #include "Passive/TPPassive_AddStat.h"
 #include "Passive/TPPassive_Bullet.h"
 #include "Active/TPActive_Granade.h"
+#include "Active/TPActive_AttackBuf.h"
+#include "Active/TPActive_Heal.h"
 
 
 void UTPSkillController::InitSkill(FTPSkillInitData& InitInfo, UTPSkillComponent* SkillComp, UTPStageManager* StageMgr)
@@ -170,6 +172,12 @@ TArray<TObjectPtr<UTPSkillBase>> UTPSkillController::GetActiveObj(int InSkillLV,
 		{
 		case ESkillEffectType::SEffect_TAKE_DMG:
 			ArrResult.Add(NewObject<UTPActive_Granade>());
+			break;
+		case ESkillEffectType::SEffect_ADD_WEAPON_ATK:
+			ArrResult.Add(NewObject<UTPActive_AttackBuf>());
+			break;
+		case ESkillEffectType::SEffect_ADD_CURRENT_HP:
+			ArrResult.Add(NewObject<UTPActive_Heal>());
 			break;
 		default:
 			break;

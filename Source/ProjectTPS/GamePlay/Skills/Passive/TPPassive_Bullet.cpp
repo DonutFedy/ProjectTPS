@@ -2,6 +2,7 @@
 
 
 #include "TPPassive_Bullet.h"
+#include "../../../TPCharacter.h"
 #include "../Buf/TPBufBase.h"
 
 
