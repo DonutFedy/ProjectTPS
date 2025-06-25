@@ -23,10 +23,11 @@ ATPHealZone::ATPHealZone()
 		CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CAPSULE"));
 		RootComponent = CollisionComp;
 		CollisionComp->InitSphereRadius(15.0f);
-		CollisionComp->SetCollisionProfileName(TEXT("Granade"));
+		CollisionComp->SetCollisionProfileName(TEXT("HealZone"));
 		CollisionComp->SetCanEverAffectNavigation(false);
 		//CollisionComp->OnComponentHit.AddDynamic(this, &ATPHealZone::OnHit);
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATPHealZone::OnCharacterOverlap);
+		CollisionComp->OnComponentEndOverlap.AddDynamic(this, &ATPHealZone::OnCharacterOverlapOut);
 		CollisionComp->SetActive(false);
 
 		// 0번 머티리얼 슬롯에서 동적 머티리얼 인스턴스 생성
@@ -46,17 +47,13 @@ ATPHealZone::ATPHealZone()
 		CurMesh->SetCanEverAffectNavigation(false);
 		//Mesh->SetCollisionObjectType(ECollisionChannel::)
 		//Mesh->SetCollisionEnabled( ECollisionEnabled::NoCollision);
-		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_Granade(TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
-		if (SM_Granade.Succeeded())
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_HealZone(TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
+		if (SM_HealZone.Succeeded())
 		{
-			CurMesh->SetStaticMesh(SM_Granade.Object);
+			CurMesh->SetStaticMesh(SM_HealZone.Object);
 		}
 	}
-	if (!Movement)
-	{
-		Movement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MOVEMENT"));
-		Movement->SetUpdatedComponent(CollisionComp);
-	}
+
 	CollisionComp->SetActive(false);
 	SetActorEnableCollision(false);
 
@@ -70,9 +67,9 @@ void ATPHealZone::BeginPlay()
 	CollisionComp->MoveIgnoreActors.Add(GetOwner());
 }
 
-void ATPHealZone::SpawnGranadeDecal(const FHitResult& Hit)
+void ATPHealZone::SpawnDecal(const FHitResult& Hit)
 {
-	UMaterialInterface* DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Script/Engine.Material'/Game/Weapon/Material/M_GranadeDecal.M_GranadeDecal'")); // 경로는 본인 머티리얼 경로로
+	UMaterialInterface* DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Script/Engine.Material'/Game/Weapon/Material/M_HealZoneDecal.M_HealZoneDecal'")); // 경로는 본인 머티리얼 경로로
 
 	if (!DecalMaterial) return;
 
@@ -95,6 +92,25 @@ void ATPHealZone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+	preiodTime +=DeltaTime;
+	curTime +=DeltaTime;
+
+	if (curTime >= 1.f)
+	{
+		curTime -= 1.f;
+		// 회복
+		EffectHeal();
+	}
+	if (preiodTime >= HealZonePeriod)
+	{
+		// 회수.
+		SetActorHiddenInGame(true);
+		SetActorTickEnabled(false);
+		SetActorEnableCollision(false);
+		OwnSkill->ReleaseObj(this);
+		return;
+	}
 }
 
 void ATPHealZone::PostInitializeComponents()
@@ -121,17 +137,17 @@ void ATPHealZone::PlayEffect()
 		{
 			NiagaraComp->OnSystemFinished.AddDynamic(this, &ATPHealZone::OnVFXFinished);
 		}
-		else
-		{
-			// 총알 제거
-			OwnSkill->ReleaseObj(this);
-		}
+// 		else
+// 		{
+// 			// 총알 제거
+// 			OwnSkill->ReleaseObj(this);
+// 		}
 	}
-	else
-	{
-		// 총알 제거
-		OwnSkill->ReleaseObj(this);
-	}
+// 	else
+// 	{
+// 		// 총알 제거
+// 		OwnSkill->ReleaseObj(this);
+// 	}
 
 	if (CurSoundCue.Num())
 	{
@@ -141,57 +157,42 @@ void ATPHealZone::PlayEffect()
 
 void ATPHealZone::OnVFXFinished(UNiagaraComponent* PSystem)
 {
-	// 총알 제거
-	OwnSkill->ReleaseObj(this);
 }
 
-void ATPHealZone::InitHealZone(TObjectPtr<class UTPActiveBase> InOwnSkill, float InGranadeDamage, float InGranadeSpd, float InRange, class ATPCharacter* InOwnerActor, bool InIsPlayerGranade)
+void ATPHealZone::EffectHeal()
+{
+	PlayEffect();
+
+	for (auto overlapChar : OverlapChars)
+	{
+		overlapChar->GetCharStat()->RecoverHP(HealZoneValue);
+	}
+}
+
+void ATPHealZone::InitHealZone(TObjectPtr<class UTPActiveBase> InOwnSkill, float InHealZoneValue, float inHealZonePeriod, float InRange, class ATPCharacter* InOwnerActor, bool InIsPlayerHealZone)
 {
 	SetActorHiddenInGame(false);
 	PrimaryActorTick.bCanEverTick = true;
 	OwnSkill = InOwnSkill;
 
-	// Data load by GranadeType
+	// Data load by HealZoneType
 	OwnerActor = InOwnerActor;
-	//GranadeIndex = InIndex;
-	//GranadeType = GranadeIndex;
-	GranadeSpd = InGranadeSpd;
-	GranadeRange = InRange;
-	GranadeDamage = InGranadeDamage;
-	GranadeCriticalRate = OwnerActor->GetFinalCriticalRate();
-	GranadeCriticalDamageRate = OwnerActor->GetFinalCriticalDamageRate();
-	GranadePierce = OwnerActor->GetFinalPierceRate();
-	IsPlayersGranade = InIsPlayerGranade;
+	IsPlayersHealZone = InIsPlayerHealZone;
+	HealZoneValue = InHealZoneValue;
+	HealZonePeriod = inHealZonePeriod;
 
 	TPCHECK(OwnerActor);
-	// 	if (OwnerActor)
-	// 	{
-	// 		// 튀어야하는 횟수
-	// 		BounceGranadeEffectValue =  OwnerActor->GetSkillEffect(ESkillIndex::SI_BOUNCE_Granade);
-	// 	}
+	OverlapChars.Empty();
 
-		// 이동 설정
-	Movement->SetUpdatedComponent(CollisionComp);
-	Movement->InitialSpeed = GranadeSpd;  // 초기 속도
-	Movement->MaxSpeed = GranadeSpd;
-	Movement->bRotationFollowsVelocity = true;
-	Movement->bShouldBounce = false;  // 벽에 부딪히면 튕기지 않고 제거
-	Movement->ProjectileGravityScale = 1.0f;
-	Movement->Bounciness = 0.0f;
-	Movement->bSweepCollision = true;
-
-	Movement->Velocity = GetActorForwardVector() * GranadeSpd;
-
-	PrevTarget = nullptr;
 	UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(CollisionComp->GetMaterial(0));
 
 	if (DynamicMaterial)
 	{
-		FLinearColor GranadeColor = FLinearColor::Red;
-		if (IsPlayersGranade)
-			GranadeColor = FLinearColor::Blue;
+		FLinearColor HealZoneColor = FLinearColor::Red;
+		if (IsPlayersHealZone)
+			HealZoneColor = FLinearColor::Blue;
 		// 머티리얼의 VectorParameter (예: "BaseColor") 변경
-		DynamicMaterial->SetVectorParameterValue(FName("BaseColor"), GranadeColor);
+		DynamicMaterial->SetVectorParameterValue(FName("BaseColor"), HealZoneColor);
 	}
 
 	CollisionComp->SetActive(true);
@@ -199,110 +200,27 @@ void ATPHealZone::InitHealZone(TObjectPtr<class UTPActiveBase> InOwnSkill, float
 
 	SetActorHiddenInGame(false);
 	SetActorTickEnabled(true);
-
-	Movement->Activate(true);
 }
 
 void ATPHealZone::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	return;
-	if (OtherActor && OtherActor != this && OwnerActor != OtherActor && PrevTarget != OtherActor)
-	{
-
-		// 캐릭터와 충돌하면 데미지 적용
-		ATPCharacter* HitCharacter = Cast<ATPCharacter>(OtherActor);
-		if (HitCharacter->IsValidLowLevel() 
-			&& ((IsPlayersGranade == true && HitCharacter->bIsPlayer == false)
-			|| (IsPlayersGranade == false && HitCharacter->bIsPlayer == true)))
-		{
-			//UGameplayStatics::ApplyDamage(HitCharacter, GranadeDamage, nullptr, this, nullptr); // 10 데미지
-			FDamageEvent DmgEvent;
-
-			
-
-			// 최종 공격력
-			float FinalDamage = GranadeDamage;
-
-			// 최종 방어력
-			float FinalDefence = HitCharacter->GetFinalDefencePoint();
-			if (FinalDefence > 0)
-			{
-				FinalDefence -= GranadePierce;
-				if(FinalDefence<=0.f)
-					FinalDefence = 0.f;
-			}
-
-			// 치명타
-			float FinalCriticalRate = 1.f;
-			if (FMath::FRandRange(0, 100.f) < GranadeCriticalRate)
-			{
-				FinalCriticalRate = GranadeCriticalDamageRate;
-			}
-
-			//캐릭터 데미지 = ((캐릭터 최종 공격력 * (몬스터 최종 방어력-캐릭터 방어 관통)) * (캐릭터 치명타 발생 여부 * 캐릭터 치명타 데미지 배율)					
-			float CurFinalGranadeDamage = FinalDamage * (1 - FinalDefence) * FinalCriticalRate;
-
-			FString CurDamageLog = FString::Printf(TEXT("%0.1f"), CurFinalGranadeDamage);
-
-
-			DrawDebugString(
-				GetWorld(),
-				Hit.ImpactPoint,          // 표시할 위치
-				*CurDamageLog,           // 표시할 텍스트
-				nullptr,                         // 소유 액터 (없으면 nullptr)
-				FColor::Red,                    // 텍스트 색상
-				0.5f,                            // 지속 시간
-				true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
-				);
-			HitCharacter->TakeDamage(CurFinalGranadeDamage, DmgEvent, OwnerActor->GetController(), this);
-			HitCharacter->PlayHitVFX(Hit);
-		}
-
-
-		SpawnGranadeDecal(Hit);
-		bool bNeedDestory = true;
-		// 총알을 튕겨야하는가?
-		if (BounceGranadeEffectValue > 0)
-		{
-			--BounceGranadeEffectValue;
-			// 500 범위의 적을 찾는다.
-			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			TPCHECK(TPGameInstance != nullptr);
-			TObjectPtr< UTPStageManager> StageMgr = TPGameInstance->GetStageManager();
-			TPCHECK(StageMgr != nullptr);
-			if (StageMgr)
-			{
-				TObjectPtr<ATPCharacter> FindNearEnemy = StageMgr->GetNearEnemy(HitCharacter, GetActorLocation());
-				if (FindNearEnemy != nullptr)
-				{
-					float Dist = (FindNearEnemy->GetActorLocation() - GetActorLocation()).Size();
-					if (Dist <= 500.f)
-					{
-						// 현재 부딪힌 엑터를 더이상 부딪히지 않게 세팅.
-						PrevTarget = HitCharacter;
-
-						bNeedDestory = false;
-						DrawDebugLine(GetWorld(), GetActorLocation(), FindNearEnemy->GetActorLocation(), FColor::Yellow, false, 1.5f);
-						FVector NewDir = (FindNearEnemy->GetActorLocation() - GetActorLocation());
-						SetActorRotation(NewDir.Rotation());
-						Movement->Velocity = NewDir * GranadeSpd;
-					}
-				}
-			}
-		}
-		if(bNeedDestory)
-		{
-			// 총알 제거
-			Destroy();
-		}
-	}
 }
 
 void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	if (OtherActor && OtherActor != this && OwnerActor != OtherActor && PrevTarget != OtherActor)
+	if (OtherActor && OtherActor != this)
 	{
+		ATPCharacter* overlapCharacter = Cast<ATPCharacter>(OtherActor);
+
+		TPCHECK(overlapCharacter != nullptr);
+		if ((IsPlayersHealZone && overlapCharacter->IsPlayer())
+		|| (!IsPlayersHealZone && !overlapCharacter->IsPlayer()))
+		{
+			OverlapChars.Add(overlapCharacter);
+		}
+
 
 // 		auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 // 		TPCHECK(TPGameInstance != nullptr);
@@ -311,7 +229,7 @@ void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor
 // 
 // 		TArray<TObjectPtr<ATPCharacter>> ArrTarget;
 // 		// 범위 내의 모든 캐릭터에게 데미지
-// 		if (IsPlayersGranade)
+// 		if (IsPlayersHealZone)
 // 		{
 // 			ArrTarget = StageMgr->GetEnemies();
 // 		}
@@ -331,34 +249,34 @@ void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor
 // 				if (HitCharacter->IsValidLowLevel())
 // 				{
 // 					float Dist = FVector::Distance(GetActorLocation(), HitCharacter->GetActorLocation());
-// 					if(Dist > GranadeRange)
+// 					if(Dist > HealZoneRange)
 // 						continue;
 // 
-// 					//UGameplayStatics::ApplyDamage(HitCharacter, GranadeDamage, nullptr, this, nullptr); // 10 데미지
+// 					//UGameplayStatics::ApplyDamage(HitCharacter, HealZoneDamage, nullptr, this, nullptr); // 10 데미지
 // 					FDamageEvent DmgEvent;
 // 					// 최종 공격력
-// 					float FinalDamage = GranadeDamage;
+// 					float FinalDamage = HealZoneDamage;
 // 
 // 					// 최종 방어력
 // 					float FinalDefence = HitCharacter->GetFinalDefencePoint();
 // 					if (FinalDefence > 0)
 // 					{
-// 						FinalDefence -= GranadePierce;
+// 						FinalDefence -= HealZonePierce;
 // 						if (FinalDefence <= 0.f)
 // 							FinalDefence = 0.f;
 // 					}
 // 
 // 					// 치명타
 // 					float FinalCriticalRate = 1.f;
-// 					if (FMath::FRandRange(0, 100.f) < GranadeCriticalRate)
+// 					if (FMath::FRandRange(0, 100.f) < HealZoneCriticalRate)
 // 					{
-// 						FinalCriticalRate = GranadeCriticalDamageRate;
+// 						FinalCriticalRate = HealZoneCriticalDamageRate;
 // 					}
 // 
 // 					//캐릭터 데미지 = ((캐릭터 최종 공격력 * (몬스터 최종 방어력-캐릭터 방어 관통)) * (캐릭터 치명타 발생 여부 * 캐릭터 치명타 데미지 배율)					
-// 					float CurFinalGranadeDamage = FinalDamage * (1 - FinalDefence) * FinalCriticalRate;
+// 					float CurFinalHealZoneDamage = FinalDamage * (1 - FinalDefence) * FinalCriticalRate;
 // 
-// 					FString CurDamageLog = FString::Printf(TEXT("%0.1f"), CurFinalGranadeDamage);
+// 					FString CurDamageLog = FString::Printf(TEXT("%0.1f"), CurFinalHealZoneDamage);
 // 
 // 
 // 					DrawDebugString(
@@ -370,18 +288,18 @@ void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor
 // 						0.5f,                            // 지속 시간
 // 						true                             // 깊이 테스트 여부 (false면 벽 뒤에서도 보임)
 // 					);
-// 					HitCharacter->TakeDamage(CurFinalGranadeDamage, DmgEvent, OwnerActor != nullptr ? OwnerActor->GetController() : nullptr, this);
+// 					HitCharacter->TakeDamage(CurFinalHealZoneDamage, DmgEvent, OwnerActor != nullptr ? OwnerActor->GetController() : nullptr, this);
 // 					HitCharacter->PlayHitVFX(SweepResult);
 // 				}
 // 			}
 // 		}
 // 
-// 		SpawnGranadeDecal(SweepResult);
+// 		SpawnHealZoneDecal(SweepResult);
 // 		bool bNeedDestory = true;
 // 		// 총알을 튕겨야하는가?
-// // 		if (BounceGranadeEffectValue > 0)
+// // 		if (BounceHealZoneEffectValue > 0)
 // // 		{
-// // 			--BounceGranadeEffectValue;
+// // 			--BounceHealZoneEffectValue;
 // // 			// 500 범위의 적을 찾는다.
 // // 			auto TPGameInstance = Cast<UTPGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 // // 			TPCHECK(TPGameInstance != nullptr);
@@ -402,7 +320,7 @@ void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor
 // // 						DrawDebugLine(GetWorld(), SweepResult.ImpactPoint, FindNearEnemy->GetActorLocation(), FColor::Yellow, false, 1.5f);
 // // 						FVector NewDir = (FindNearEnemy->GetActorLocation() - SweepResult.ImpactPoint);
 // // 						SetActorRotation(NewDir.Rotation());
-// // 						Movement->Velocity = NewDir * GranadeSpd;
+// // 						Movement->Velocity = NewDir * HealZoneSpd;
 // // 					}
 // // 				}
 // // 			}
@@ -416,5 +334,16 @@ void ATPHealZone::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor
 // 			Movement->Deactivate();
 // 			PlayEffect();
 // 		}
+	}
+}
+
+void ATPHealZone::OnCharacterOverlapOut(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor && OtherActor != this)
+	{
+		ATPCharacter* overlapOutCharacter = Cast<ATPCharacter>(OtherActor);
+
+		TPCHECK(overlapOutCharacter != nullptr);
+		OverlapChars.Remove(overlapOutCharacter);
 	}
 }

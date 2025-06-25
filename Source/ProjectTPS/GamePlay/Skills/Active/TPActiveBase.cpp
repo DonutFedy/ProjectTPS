@@ -94,7 +94,10 @@ bool UTPActiveBase::CheckSkillConditionAfterAction(ESkillConditionType ActionTyp
 		case ESkillConditionType::SCondition_CHARACTER_USE_SKILL:
 		{
 			RunSkill(CurActiveIndex);
-			return true;
+			if(CurSkillInfo.SkillUseType == ESkillUseType::SUT_CONFIRM)
+				return true;
+			return false;
+			//return true;
 		}
 		default:
 			break;

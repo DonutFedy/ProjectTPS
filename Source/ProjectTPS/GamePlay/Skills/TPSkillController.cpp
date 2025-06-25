@@ -12,6 +12,7 @@
 #include "Active/TPActive_Granade.h"
 #include "Active/TPActive_AttackBuf.h"
 #include "Active/TPActive_Heal.h"
+#include "Active/TPActive_HealZone.h"
 
 
 void UTPSkillController::InitSkill(FTPSkillInitData& InitInfo, UTPSkillComponent* SkillComp, UTPStageManager* StageMgr)
@@ -178,6 +179,9 @@ TArray<TObjectPtr<UTPSkillBase>> UTPSkillController::GetActiveObj(int InSkillLV,
 			break;
 		case ESkillEffectType::SEffect_ADD_CURRENT_HP:
 			ArrResult.Add(NewObject<UTPActive_Heal>());
+			break;
+		case ESkillEffectType::SEffect_ADD_CURRENT_HP_ZONE:
+			ArrResult.Add(NewObject<UTPActive_HealZone>());
 			break;
 		default:
 			break;

@@ -172,13 +172,16 @@ public:
 
 
 #pragma region Stat Component
+private:
 	UPROPERTY(VisibleAnywhere, Category=Stat)
 	TObjectPtr<class UTPCharacterStatComponent> CharacterStat;
 
 	int EnemySetupIndex;
 	int EnemySetupLv;
+public:
+	TObjectPtr<class UTPCharacterStatComponent> GetCharStat(){return CharacterStat;}
 #pragma endregion
-
+public:
 
 	FOnNoParamDeletage OnDead;
 

@@ -32,6 +32,8 @@ enum class ESkillIndex : uint32 {
 	SI_AT_GRANADE				=	2001,
 	SI_AT_ATTACK_BUF			=	2002,
 	SI_AT_HEAL					=	2003,
+	SI_AT_HEALZONE				=	2004,
+	SI_AT_SHIELD				=	2005,
 };
 
 
@@ -102,6 +104,7 @@ enum class ESkillEffectType : uint8 {
 	SEffect_TAKE_DMG,
 	SEffect_ADD_WEAPON_ATK,
 	SEffect_ADD_CURRENT_HP,
+	SEffect_ADD_CURRENT_HP_ZONE,
 	SEffect_ADD_TEMP_ARMOR,
 	SEffect_ADD_CHARACTER_STAT_SHIELDMAX,
 	SEffect_ADD_CHARACTER_STAT_SHIELDREST,

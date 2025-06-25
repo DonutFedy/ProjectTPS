@@ -20,7 +20,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void SpawnGranadeDecal(const FHitResult& Hit);
+	void SpawnDecal(const FHitResult& Hit);
 
 public:	
 	// Called every frame
@@ -33,7 +33,10 @@ public:
 	void OnVFXFinished(class UNiagaraComponent* PSystem);
 	// VFX end
 
-	void InitHealZone(TObjectPtr<class UTPActiveBase> InOwnSkill, float InGranadeDamage, float InGranadeSpd, float InRange , class ATPCharacter* InOwnerActor, bool InIsPlayerGranade);
+	// 효과
+	void EffectHeal();
+
+	void InitHealZone(TObjectPtr<class UTPActiveBase> InOwnSkill, float InHealZoneValue, float inHealZonePeriod, float InRange , class ATPCharacter* InOwnerActor, bool InIsPlayerHealZone);
 	
     UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -41,57 +44,41 @@ public:
 	
     UFUNCTION()
 	void OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+    UFUNCTION()
+	void OnCharacterOverlapOut(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-
-	UPROPERTY(VisibleAnywhere, Category= Granade)
+private:
+	UPROPERTY(VisibleAnywhere, Category= HealZone)
 	USphereComponent* CollisionComp;
 
-	UPROPERTY(VisibleAnywhere, Category= Granade)
+	UPROPERTY(VisibleAnywhere, Category= HealZone)
 	UStaticMeshComponent* CurMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = Granade)
-	UProjectileMovementComponent* Movement;
+	UPROPERTY(VIsibleAnywhere, Category = HealZone)
+	float HealZoneValue;
+	UPROPERTY(VIsibleAnywhere, Category = HealZone)
+	float HealZonePeriod;
 
-	UPROPERTY(VIsibleAnywhere, Category=Granade)
-	int GranadeIndex;
+	float preiodTime;
+	float curTime;
 
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	int GranadeType;
+	UPROPERTY(Transient,VIsibleAnywhere, Category = HealZone)
+	bool IsPlayersHealZone; // false면 모든 오브젝트 회복
 
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadeSpd;
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadeRange;
-
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadeDamage;
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadePierce;
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadeCriticalRate;
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	float GranadeCriticalDamageRate;
-
-	UPROPERTY(Transient,VIsibleAnywhere, Category = Granade)
-	bool IsPlayersGranade;
-
-	UPROPERTY(Transient, VIsibleAnywhere, Category = Granade)
+	UPROPERTY(Transient, VIsibleAnywhere, Category = HealZone)
 	class ATPCharacter* OwnerActor;
-	UPROPERTY(Transient, VIsibleAnywhere, Category = Granade)
-	class AActor* PrevTarget;
-	UPROPERTY(Transient, VIsibleAnywhere, Category = Granade)
-	int BounceGranadeEffectValue;
+	UPROPERTY(Transient, VIsibleAnywhere, Category = HealZone)
+	TArray<TObjectPtr<class ATPCharacter>> OverlapChars;
 	
-	UPROPERTY(Transient, VIsibleAnywhere, Category = Granade)
+	UPROPERTY(Transient, VIsibleAnywhere, Category = HealZone)
 	TObjectPtr<class UTPActiveBase> OwnSkill;
 
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT, Meta = (AllowprivateAccess = true))
 	TArray<TObjectPtr<USoundCue>>	CurSoundCue;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EFFECT, Meta = (AllowprivateAccess = true))
 	TObjectPtr<class UNiagaraSystem> MuzzleFlashFX;
 
-// 	UPROPERTY(VisibleAnywhere, Category = Movement)
-// 	UFloatingPawnMovement* Movement;
 };

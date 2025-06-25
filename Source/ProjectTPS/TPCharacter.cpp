@@ -1323,7 +1323,8 @@ void ATPCharacter::UseSkill1()
 		ReleaseUseSkill();
 		return;
 	}
-	SkillReadyToUse = ESkillIndex::SI_AT_GRANADE;
+	//SkillReadyToUse = ESkillIndex::SI_AT_GRANADE;
+	SkillReadyToUse = ESkillIndex::SI_AT_HEALZONE;
 	IsSkillReadyToUse = SkillComponent->UseActiveSkill(SkillReadyToUse);
 }
 
@@ -1336,7 +1337,8 @@ void ATPCharacter::UseSkill2()
 		return;
 	}
 	//SkillReadyToUse = ESkillIndex::SI_AT_ATTACK_BUF;
-	SkillReadyToUse = ESkillIndex::SI_AT_HEAL;
+	//SkillReadyToUse = ESkillIndex::SI_AT_HEAL;
+	SkillReadyToUse = ESkillIndex::SI_AT_GRANADE;
 	IsSkillReadyToUse = SkillComponent->UseActiveSkill(SkillReadyToUse);
 }
 

@@ -52,11 +52,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Granade)
 	UProjectileMovementComponent* Movement;
 
-	UPROPERTY(VIsibleAnywhere, Category=Granade)
-	int GranadeIndex;
-
-	UPROPERTY(VIsibleAnywhere, Category = Granade)
-	int GranadeType;
 
 	UPROPERTY(VIsibleAnywhere, Category = Granade)
 	float GranadeSpd;
